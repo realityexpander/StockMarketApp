@@ -1,4 +1,4 @@
-package com.plcoding.stockmarketapp
+package com.realityexpander.stockmarketapp
 
 import org.junit.Test
 
