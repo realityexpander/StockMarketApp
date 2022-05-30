@@ -1,7 +1,10 @@
 package com.realityexpander.stockmarketapp.data.repository
 
+import com.realityexpander.stockmarketapp.data.csv.CSVParser
+import com.realityexpander.stockmarketapp.data.csv.CompanyListingsParser
 import com.realityexpander.stockmarketapp.data.local.StockDatabase
 import com.realityexpander.stockmarketapp.data.mapper.toCompanyListing
+import com.realityexpander.stockmarketapp.data.mapper.toCompanyListingEntity
 import com.realityexpander.stockmarketapp.data.remote.dto.StockApi
 import com.realityexpander.stockmarketapp.domain.model.CompanyListing
 import com.realityexpander.stockmarketapp.domain.repository.StockRepository
@@ -16,7 +19,8 @@ import javax.inject.Singleton
 @Singleton
 class StockRepositoryImpl @Inject constructor(
     val api: StockApi,
-    val db: StockDatabase
+    val db: StockDatabase,
+    val companyListingsParser: CSVParser<CompanyListing>,
 ): StockRepository {
 
     private val dao = db.dao
@@ -45,15 +49,31 @@ class StockRepositoryImpl @Inject constructor(
             // Attempt to load from remote.
             val remoteListings = try {
                 val response = api.getListOfStocks()
-                response.byteStream()
+                companyListingsParser.parse(response.byteStream())
             } catch (e: IOException) { // parse error
                 e.printStackTrace()
                 emit(Resource.Error(e.localizedMessage ?: "Error loading or parsing data"))
-                return@flow
+                null
             } catch (e: HttpException) { // invalid network response
                 e.printStackTrace()
                 emit(Resource.Error(e.localizedMessage ?: "Error with network"))
-                return@flow
+                null
+            }
+
+            // Save to local cache.
+            remoteListings?.let { listings ->
+                dao.clearCompanyListings()
+                dao.insertCompanyListings(
+                    listings.map { it.toCompanyListingEntity() }
+                )
+
+                // Get listings from local cache, yes this is tiny bit inefficient but conforms to SSOT
+                emit(Resource.Success(
+                    data = dao
+                        .searchCompanyListing("")
+                        .map { it.toCompanyListing() }
+                ))
+                emit(Resource.Loading(false))
             }
         }
     }
