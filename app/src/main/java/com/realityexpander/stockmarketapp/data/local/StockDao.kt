@@ -8,6 +8,8 @@ import androidx.room.Query
 @Dao
 interface StockDao {
 
+    // CompanyListings (initial screen)
+
     @Insert(onConflict =  OnConflictStrategy.REPLACE)
     suspend fun insertCompanyListings(companyListingEntities: List<CompanyListingEntity>)
 
@@ -25,4 +27,11 @@ interface StockDao {
         """
     )
     suspend fun searchCompanyListing(searchString: String): List<CompanyListingEntity>
+
+
+
+    // CompanyInfo (detail screen)
+
+    @Query("SELECT * FROM company_info_entity WHERE symbol = :stockSymbol")
+    abstract fun getCompanyInfo(stockSymbol: String): Any
 }

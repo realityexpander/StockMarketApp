@@ -6,10 +6,26 @@ import retrofit2.http.Query
 
 interface StockApi {
 
+    // returns a csv of company listings (only csv is supported)
     @GET("query?function=LISTING_STATUS")
     suspend fun getListOfStocks(
         @Query("apikey") apiKey: String = API_KEY,
     ): ResponseBody
+
+    // returns a csv of intraday stock prices
+    @GET("query?function=TIME_SERIES_INTRADAY&interval=60min&datatype=csv")
+    suspend fun getIntradayInfo(
+        @Query("symbol") symbol: String,
+        @Query("apikey") apiKey: String = API_KEY,
+    ): ResponseBody
+
+    // returns a json of company info
+    @GET("query?function=OVERVIEW&datatype=json")
+    suspend fun getCompanyInfo(
+        @Query("symbol") symbol: String,
+        @Query("apikey") apiKey: String = API_KEY,
+    ): CompanyInfoDTO
+
 
     companion object {
         const val BASE_URL = "https://www.alphavantage.co"

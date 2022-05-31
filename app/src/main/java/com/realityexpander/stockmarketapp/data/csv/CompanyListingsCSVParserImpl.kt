@@ -9,8 +9,8 @@ import java.io.InputStreamReader
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@Singleton
-class CompanyListingsParserImpl @Inject constructor(): CSVParser<CompanyListing> {
+@Singleton  //                        v-- this indicates this class is available to be injected via Hilt
+class CompanyListingsCSVParserImpl @Inject constructor(): CSVParser<CompanyListing> {
 
     override suspend fun parse(csvStream: InputStream): List<CompanyListing> {
         val csvReader = CSVReader(InputStreamReader(csvStream))
@@ -18,7 +18,7 @@ class CompanyListingsParserImpl @Inject constructor(): CSVParser<CompanyListing>
         return withContext(Dispatchers.IO) {
             csvReader
                 .readAll()
-                .drop(1) // drop header
+                .drop(1) // drop header row
                 .mapNotNull { line ->
                     val (symbol, name, exchange) = line
 

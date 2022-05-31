@@ -2,10 +2,13 @@ package com.realityexpander.stockmarketapp.data.repository
 
 import com.realityexpander.stockmarketapp.data.csv.CSVParser
 import com.realityexpander.stockmarketapp.data.local.StockDatabase
+import com.realityexpander.stockmarketapp.data.mapper.toCompanyInfo
 import com.realityexpander.stockmarketapp.data.mapper.toCompanyListing
 import com.realityexpander.stockmarketapp.data.mapper.toCompanyListingEntity
 import com.realityexpander.stockmarketapp.data.remote.dto.StockApi
+import com.realityexpander.stockmarketapp.domain.model.CompanyInfo
 import com.realityexpander.stockmarketapp.domain.model.CompanyListing
+import com.realityexpander.stockmarketapp.domain.model.IntradayInfo
 import com.realityexpander.stockmarketapp.domain.repository.StockRepository
 import com.realityexpander.stockmarketapp.util.Resource
 import kotlinx.coroutines.flow.Flow
@@ -19,7 +22,8 @@ import javax.inject.Singleton
 class StockRepositoryImpl @Inject constructor(
     private val api: StockApi,
     private val db: StockDatabase,
-    private val companyListingsParser: CSVParser<CompanyListing>,
+    private val companyListingsCSVParser: CSVParser<CompanyListing>,
+    private val intradayInfoCSVParser: CSVParser<IntradayInfo>,
 ): StockRepository {
 
     private val dao = db.dao
@@ -47,15 +51,15 @@ class StockRepositoryImpl @Inject constructor(
 
             // Attempt to load from remote.
             val remoteListings = try {
-                val response = api.getListOfStocks()
-                companyListingsParser.parse(response.byteStream())
+                val response = api.getListOfStocks() // returns a CSV file.
+                companyListingsCSVParser.parse(response.byteStream())
             } catch (e: IOException) { // parse error
                 e.printStackTrace()
-                emit(Resource.Error(e.localizedMessage ?: "Error loading or parsing data"))
+                emit(Resource.Error(e.localizedMessage ?: "Error loading or parsing company listings"))
                 null
             } catch (e: HttpException) { // invalid network response
                 e.printStackTrace()
-                emit(Resource.Error(e.localizedMessage ?: "Error with network"))
+                emit(Resource.Error(e.localizedMessage ?: "Error with network for company listings"))
                 null
             }
 
@@ -77,4 +81,58 @@ class StockRepositoryImpl @Inject constructor(
         }
     }
 
+
+    override suspend fun getIntradayInfo(stockSymbol: String): Resource<List<IntradayInfo>> {
+        return try {
+            val response = api.getIntradayInfo(stockSymbol).byteStream()
+            val results = intradayInfoCSVParser.parse(response)
+            Resource.Success(results)
+        } catch (e: IOException) { // parse error
+            e.printStackTrace()
+            Resource.Error(e.localizedMessage ?: "Error loading or parsing intraday info")
+        } catch (e: HttpException) { // invalid network response
+            e.printStackTrace()
+            Resource.Error(e.localizedMessage ?: "Error with network for intraday info")
+        }
+    }
+
+    override suspend fun getCompanyInfo(stockSymbol: String): Resource<CompanyInfo> {
+        return try {
+            val response = api.getCompanyInfo(stockSymbol)
+            Resource.Success(response.toCompanyInfo())
+        } catch (e: IOException) { // parse error
+            e.printStackTrace()
+            Resource.Error(e.localizedMessage ?: "Error loading or parsing company info")
+        } catch (e: HttpException) { // invalid network response
+            e.printStackTrace()
+            Resource.Error(e.localizedMessage ?: "Error with network for company info")
+        }
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
