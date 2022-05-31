@@ -1,7 +1,6 @@
 package com.realityexpander.stockmarketapp.data.repository
 
 import com.realityexpander.stockmarketapp.data.csv.CSVParser
-import com.realityexpander.stockmarketapp.data.csv.CompanyListingsParser
 import com.realityexpander.stockmarketapp.data.local.StockDatabase
 import com.realityexpander.stockmarketapp.data.mapper.toCompanyListing
 import com.realityexpander.stockmarketapp.data.mapper.toCompanyListingEntity

@@ -1,7 +1,7 @@
 package com.realityexpander.stockmarketapp.di
 
 import com.realityexpander.stockmarketapp.data.csv.CSVParser
-import com.realityexpander.stockmarketapp.data.csv.CompanyListingsParser
+import com.realityexpander.stockmarketapp.data.csv.CompanyListingsParserImpl
 import com.realityexpander.stockmarketapp.data.repository.StockRepositoryImpl
 import com.realityexpander.stockmarketapp.domain.model.CompanyListing
 import com.realityexpander.stockmarketapp.domain.repository.StockRepository
@@ -18,8 +18,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindCompanyListingsParser(
-        companyListingsParser: CompanyListingsParser
-    ): CSVParser<CompanyListing>
+        companyListingsParserImpl: CompanyListingsParserImpl // <-- provides an instance...
+    ): CSVParser<CompanyListing> // <-- ... of this interface
 
     @Binds
     @Singleton

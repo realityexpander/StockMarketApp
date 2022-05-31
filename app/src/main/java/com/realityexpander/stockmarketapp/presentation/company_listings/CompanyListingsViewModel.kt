@@ -27,7 +27,7 @@ class CompanyListingsViewModel @Inject constructor(
             is CompanyListingsEvent.OnRefresh -> {
                 getCompanyListings(state.searchQuery, true)
             }
-            is CompanyListingsEvent.onSearchQueryChanged -> {
+            is CompanyListingsEvent.OnSearchQueryChanged -> {
                 state = state.copy(searchQuery = event.query)
 
                 searchJob?.cancel()
