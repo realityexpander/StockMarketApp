@@ -27,11 +27,14 @@ class CompanyListingsViewModel @Inject constructor(
     }
 
     fun onEvent(event: CompanyListingsEvent) {
+
         when (event) {
             is CompanyListingsEvent.OnRefresh -> {
+                clearErrorMessage()
                 getCompanyListings(state.searchQuery, true)
             }
             is CompanyListingsEvent.OnSearchQueryChanged -> {
+                clearErrorMessage()
                 state = state.copy(searchQuery = event.query)
 
                 searchJob?.cancel()
@@ -64,5 +67,9 @@ class CompanyListingsViewModel @Inject constructor(
                     }
             }
         }
+    }
+
+    private fun clearErrorMessage() {
+        state = state.copy(errorMessage = null)
     }
 }

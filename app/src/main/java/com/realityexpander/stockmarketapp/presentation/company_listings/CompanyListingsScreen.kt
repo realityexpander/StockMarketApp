@@ -48,6 +48,7 @@ fun CompanyListingsScreen(
             maxLines = 1,
             singleLine = true,
         )
+        // Show loading indicator
         if (state.isLoading)
         {
             CircularProgressIndicator(
@@ -65,6 +66,7 @@ fun CompanyListingsScreen(
                 textAlign = TextAlign.Center
             )
         }
+        // Show error message
         if (state.errorMessage != null)
         {
             Text(
