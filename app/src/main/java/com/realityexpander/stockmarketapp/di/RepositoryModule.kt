@@ -21,13 +21,13 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindCompanyListingsCSVParser(
         companyListingsCSVParserImpl: CompanyListingsCSVParserImpl // <-- provides this instance...
-    ): CSVParser<CompanyListing> // <-- ... of this interface
+    ): CSVParser<CompanyListing> // <-- ... of this interface.
 
     @Binds
     @Singleton
     abstract fun bindIntradayInfoCSVParser(
         intradayInfoCSVParserImpl: IntradayInfoCSVParserImpl // <-- provides this instance...
-    ): CSVParser<IntradayInfo> // <-- ... of this interface
+    ): CSVParser<IntradayInfo> // <-- ... of this interface.
 
     @Binds
     @Singleton

@@ -32,6 +32,6 @@ interface StockDao {
 
     // CompanyInfo (detail screen)
 
-    @Query("SELECT * FROM company_info_entity WHERE symbol = :stockSymbol")
-    abstract fun getCompanyInfo(stockSymbol: String): Any
+//    @Query("SELECT * FROM company_info_entity WHERE symbol = :stockSymbol")
+//    abstract fun getCompanyInfo(stockSymbol: String): Any
 }
