@@ -17,6 +17,8 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.realityexpander.stockmarketapp.domain.model.CompanyListing
+import com.realityexpander.stockmarketapp.util.Resource
 
 @Composable
 @Destination(start = true)
@@ -57,6 +59,16 @@ fun CompanyListingsScreen(
             )
             Text(
                 "Loading…",
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        }
+        if (state.errorMessage != null)
+        {
+            Text(
+                "Error: ${state.errorMessage}",
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth(),

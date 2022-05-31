@@ -22,6 +22,7 @@ class CompanyListingsViewModel @Inject constructor(
 
     init {
         state = state.copy(isLoading = true)
+        runBlocking {delay(500)} // To show loading state
         getCompanyListings("", false)
     }
 

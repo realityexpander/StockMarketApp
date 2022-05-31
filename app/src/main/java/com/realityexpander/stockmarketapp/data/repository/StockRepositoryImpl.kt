@@ -45,13 +45,13 @@ class StockRepositoryImpl @Inject constructor(
             val isDbEmpty = localListings.isEmpty() && query.isBlank()
             val shouldJustLoadFromCache = !isDbEmpty && !fetchFromRemote
             if(shouldJustLoadFromCache) {
-                emit(Resource.Loading(false ))
+                emit(Resource.Loading(false )) // Cache is good, We're done here.
                 return@flow
             }
 
             // Attempt to load from remote.
             val remoteListings = try {
-                val response = api.getListOfStocks() // returns a CSV file.
+                val response = api.getListOfStocks()
                 companyListingsCSVParser.parse(response.byteStream())
             } catch (e: IOException) { // parse error
                 e.printStackTrace()
@@ -76,8 +76,8 @@ class StockRepositoryImpl @Inject constructor(
                         .searchCompanyListing("")
                         .map { it.toCompanyListing() }
                 ))
-                emit(Resource.Loading(false))
             }
+            emit(Resource.Loading(false))
         }
     }
 
