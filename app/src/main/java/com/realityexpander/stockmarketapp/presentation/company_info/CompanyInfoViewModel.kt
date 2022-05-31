@@ -45,7 +45,8 @@ class CompanyInfoViewModel @Inject constructor(
                 is Resource.Error -> {
                     state.copy(
                         isLoading = false,
-                        errorMessage = result.message
+                        errorMessage = result.message,
+                        companyInfo = null
                     )
                 }
                 is Resource.Loading -> state // do nothing
@@ -57,7 +58,7 @@ class CompanyInfoViewModel @Inject constructor(
                         state.copy(
                             isLoading = false,
                             errorMessage = "No data available",
-                            companyInfo = null
+                            stockIntradayInfos = emptyList()
                         )
                     } else {
                         state.copy(
@@ -72,7 +73,7 @@ class CompanyInfoViewModel @Inject constructor(
                     state.copy(
                         isLoading = false,
                         errorMessage = result.message,
-                        companyInfo = null
+                        stockIntradayInfos = emptyList()
                     )
                 }
                 is Resource.Loading -> state // do nothing
