@@ -49,6 +49,7 @@ fun CompanyListingItem(
         Column(
             modifier = Modifier.weight(1f),
         ) {
+            Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -67,14 +68,15 @@ fun CompanyListingItem(
                     fontWeight = FontWeight.Light,
                     color = MaterialTheme.colors.onBackground,
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "(${companyListing.companySymbol})",
-                    fontStyle = FontStyle.Italic,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colors.onBackground,
-                )
             }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "(${companyListing.companySymbol})",
+                fontStyle = FontStyle.Italic,
+                fontSize = 16.sp,
+                color = MaterialTheme.colors.onBackground,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

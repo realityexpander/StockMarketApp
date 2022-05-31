@@ -14,7 +14,7 @@ interface StockDao {
     @Query("DELETE FROM company_listing_entity")
     suspend fun clearCompanyListings()
 
-    // "||" is like a string "+" in kotlin
+    // "||" is like string "+" (concatenation) in kotlin
     // tEs -> name LIKE %tes% OR TES == symbol
     @Query(
         """

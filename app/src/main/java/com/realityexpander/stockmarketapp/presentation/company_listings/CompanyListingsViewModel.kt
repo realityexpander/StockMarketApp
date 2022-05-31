@@ -8,19 +8,22 @@ import androidx.lifecycle.viewModelScope
 import com.realityexpander.stockmarketapp.domain.repository.StockRepository
 import com.realityexpander.stockmarketapp.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import javax.inject.Inject
 
 @HiltViewModel
 class CompanyListingsViewModel @Inject constructor(
     private val repository: StockRepository
-): ViewModel() {
+) : ViewModel() {
 
     var state by mutableStateOf(CompanyListingsState())
 
     private var searchJob: Job? = null
+
+    init {
+        state = state.copy(isLoading = true)
+        getCompanyListings("", false)
+    }
 
     fun onEvent(event: CompanyListingsEvent) {
         when (event) {
@@ -44,15 +47,21 @@ class CompanyListingsViewModel @Inject constructor(
         fetchFromRemote: Boolean = false
     ) {
         viewModelScope.launch {
-            repository
-                .getCompanyListings(fetchFromRemote, query)
-                .collect { result ->
-                    state = when(result) {
-                        is Resource.Success -> state.copy(companyListings = result.data ?: emptyList())
-                        is Resource.Error -> state.copy(errorMessage = result.message)
-                        is Resource.Loading -> state.copy(isLoading = result.isLoading)
+            withContext(Dispatchers.IO) {
+                repository
+                    .getCompanyListings(fetchFromRemote, query)
+                    .collect { result ->
+                        withContext(Dispatchers.Main) {
+                            state = when (result) {
+                                is Resource.Success -> state.copy(
+                                    companyListings = result.data ?: emptyList()
+                                )
+                                is Resource.Error -> state.copy(errorMessage = result.message)
+                                is Resource.Loading -> state.copy(isLoading = result.isLoading)
+                            }
+                        }
                     }
-                }
+            }
         }
     }
 }
