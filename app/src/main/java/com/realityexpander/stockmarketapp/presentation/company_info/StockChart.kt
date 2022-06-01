@@ -13,6 +13,11 @@ import androidx.compose.ui.unit.sp
 import com.realityexpander.stockmarketapp.domain.model.IntradayInfo
 import kotlin.math.roundToInt
 
+enum class GraphLineMode {
+    Line,
+    Bezier
+}
+
 @Composable
 fun StockChart(
     modifier: Modifier = Modifier,
@@ -25,10 +30,10 @@ fun StockChart(
         graphColor.copy(alpha = 0.5f)
     }
     val upperPrice = remember(infos) {
-        infos.maxOfOrNull { it.close }?.roundToInt() ?: 0
+        infos.maxOfOrNull { it.close }?.roundUpToInt() ?: 0
     }
     val lowerPrice = remember(infos) {
-        infos.minOfOrNull { it.close }?.roundToInt() ?: 0
+        infos.minOfOrNull { it.close }?.roundDownToInt() ?: 0
     }
     val pixelDensity = LocalDensity.current
     val textPaint = remember {
@@ -80,7 +85,7 @@ fun StockChart(
             val info = infos[i]
             val leftRatio = (info.close.toFloat() - lowerPrice) / (upperPrice - lowerPrice)
             val x = i * spacePerHour + spacing
-            val y = height - spacing - (leftRatio * height)
+            val y = height - spacing - (leftRatio * (height))
             if (i == 0) {
                 moveTo(x, y)
             } else {
@@ -124,8 +129,8 @@ fun StockChart(
         val fillPath = android.graphics.Path(strokePath.asAndroidPath())
             .asComposePath()
             .apply {
-                lineTo(lastX, size.height - spacing)
-                lineTo(spacing, size.height - spacing)
+                lineTo(lastX, size.height - spacing/2)
+                lineTo(spacing, size.height - spacing/2)
                 close()
             }
 
@@ -154,6 +159,16 @@ fun StockChart(
     }
 }
 
+// Round up to the nearest integer
+fun Double.roundUpToInt(): Int {
+    return (this + 0.5).roundToInt()
+}
+
+// Round down to the nearest integer
+fun Double.roundDownToInt(): Int {
+    return (this - 0.5).roundToInt()
+}
+
 private fun Int.to12HourFormat(): String {
     return if (this == 0) {
         "12am"
@@ -164,16 +179,6 @@ private fun Int.to12HourFormat(): String {
     } else {
         "${this}am"
     }
-}
-
-enum class GraphLineMode {
-    Line,
-    Bezier
-}
-
-// Round up to the nearest integer
-private fun Double.roundUpInt(): Int {
-    return (this + 0.5).roundToInt()
 }
 
 // Round to specific number of decimal places
