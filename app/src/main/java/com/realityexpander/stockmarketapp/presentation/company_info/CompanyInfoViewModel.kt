@@ -22,9 +22,6 @@ class CompanyInfoViewModel @Inject constructor(
     var state by mutableStateOf(CompanyInfoState())
 
     init {
-//        savedStateHandle.get<CompanyInfoState>(key = "SAVED_STATE")?.let {
-//            state = it
-//        }
 
         viewModelScope.launch {
             val symbol = savedStateHandle.get<String>("symbol") ?: return@launch
@@ -37,14 +34,14 @@ class CompanyInfoViewModel @Inject constructor(
             state = when (val result = companyInfoResult.await()) {
                 is Resource.Success -> {
                     state.copy(
-                        isLoading = false,
+                        //isLoading = false,
                         companyInfo = result.data,
                         errorMessage = null
                     )
                 }
                 is Resource.Error -> {
                     state.copy(
-                        isLoading = false,
+                        //isLoading = false,
                         errorMessage = result.message,
                         companyInfo = null
                     )
@@ -57,7 +54,7 @@ class CompanyInfoViewModel @Inject constructor(
                     if (result.data == null) {
                         state.copy(
                             isLoading = false,
-                            errorMessage = "No data available",
+                            errorMessage = "Data not available.",
                             stockIntradayInfos = emptyList()
                         )
                     } else {

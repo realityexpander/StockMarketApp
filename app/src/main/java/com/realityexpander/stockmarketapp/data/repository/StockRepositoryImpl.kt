@@ -85,6 +85,7 @@ class StockRepositoryImpl @Inject constructor(
     override suspend fun getIntradayInfo(stockSymbol: String): Resource<List<IntradayInfo>> {
         return try {
             val response = api.getIntradayInfo(stockSymbol).byteStream()
+            // println(response.readBytes().toString(Charsets.UTF_8))
             val results = intradayInfoCSVParser.parse(response)
             Resource.Success(results)
         } catch (e: IOException) { // parse error
@@ -93,6 +94,9 @@ class StockRepositoryImpl @Inject constructor(
         } catch (e: HttpException) { // invalid network response
             e.printStackTrace()
             Resource.Error(e.localizedMessage ?: "Error with network for intraday info")
+        } catch (e: Exception) { // unknown error
+            e.printStackTrace()
+            Resource.Error("$e" ?: "Unknown Error loading or parsing intraday info")
         }
     }
 
@@ -106,6 +110,9 @@ class StockRepositoryImpl @Inject constructor(
         } catch (e: HttpException) { // invalid network response
             e.printStackTrace()
             Resource.Error(e.localizedMessage ?: "Error with network for company info")
+        } catch (e: Exception) { // unknown error
+            e.printStackTrace()
+            Resource.Error("$e" ?: "Unknown Error loading or parsing company info")
         }
     }
 }

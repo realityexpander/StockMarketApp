@@ -18,6 +18,7 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.realityexpander.stockmarketapp.domain.model.CompanyListing
+import com.realityexpander.stockmarketapp.presentation.destinations.CompanyInfoScreenDestination
 import com.realityexpander.stockmarketapp.util.Resource
 
 @Composable
@@ -49,8 +50,7 @@ fun CompanyListingsScreen(
             singleLine = true,
         )
         // Show loading indicator
-        if (state.isLoading)
-        {
+        if (state.isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier
                     .padding(16.dp)
@@ -67,8 +67,7 @@ fun CompanyListingsScreen(
             )
         }
         // Show error message
-        if (state.errorMessage != null)
-        {
+        if (state.errorMessage != null) {
             Text(
                 "Error: ${state.errorMessage}",
                 modifier = Modifier
@@ -92,11 +91,11 @@ fun CompanyListingsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-//                            navigator.navigateTo(
-//                                CompanyListingDetailsScreen(
-//                                    companyListing = state.companyListings[i]
-//                                )
-//                            )
+                                navigator.navigate(
+                                    CompanyInfoScreenDestination(
+                                        symbol = state.companyListings[i].companySymbol
+                                    )
+                                )
                             },
                     )
 
