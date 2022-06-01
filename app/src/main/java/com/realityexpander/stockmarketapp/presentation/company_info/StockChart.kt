@@ -74,9 +74,8 @@ fun StockChart(
         // Graph
 
         var lastX = 0f;
-        fun Path.drawLineGraph(
-            i: Int,
-            height: Float
+
+        fun Path.drawLineGraph(i: Int, height: Float
         ) {
             val info = infos[i]
             val leftRatio = (info.close.toFloat() - lowerPrice) / (upperPrice - lowerPrice)
@@ -87,6 +86,7 @@ fun StockChart(
             } else {
                 lineTo(x, y)
             }
+            lastX = x
         }
 
         fun Path.drawBezierGraph(i: Int, height: Float) {

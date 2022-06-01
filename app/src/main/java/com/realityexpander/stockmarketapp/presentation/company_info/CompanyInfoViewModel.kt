@@ -49,6 +49,7 @@ class CompanyInfoViewModel @Inject constructor(
                     IntradayInfo(LocalDateTime.parse("2020-05-31 09:00:00",fmt), close = 80.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
                     IntradayInfo(LocalDateTime.parse("2020-05-31 10:00:00",fmt), close = 20.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
                     IntradayInfo(LocalDateTime.parse("2020-05-31 11:00:00",fmt), close = 10.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
+                    IntradayInfo(LocalDateTime.parse("2020-05-31 13:00:00",fmt), close = 90.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
                 ))
                 response
             }
