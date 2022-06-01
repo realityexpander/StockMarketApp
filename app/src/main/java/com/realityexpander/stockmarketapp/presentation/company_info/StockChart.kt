@@ -46,7 +46,7 @@ fun StockChart(
         val spacePerHour = (size.width - spacing) / infos.size
         (0 until infos.size step 2).forEach { i ->
             val info = infos[i]
-            val hour = info.datetime.hour
+            val hour = info.datetime.hour.to12HourFormat()
             drawContext.canvas.nativeCanvas.apply {
                 drawText(
                     hour.toString(),
@@ -62,7 +62,7 @@ fun StockChart(
         (0..5).forEach { i ->
             drawContext.canvas.nativeCanvas.apply {
                 drawText(
-                    ((i.toFloat() * priceStep) + lowerPrice).roundToDecimalPlaces(1).toString(),
+                    "$"+((i.toFloat() * priceStep) + lowerPrice).roundToDecimalPlaces(1).toString(),
                     30f,
                     size.height - spacing - (i * size.height / 5f),
                     textPaint
@@ -151,6 +151,18 @@ fun StockChart(
                 cap = StrokeCap.Round,
             )
         )
+    }
+}
+
+private fun Int.to12HourFormat(): String {
+    return if (this == 0) {
+        "12am"
+    } else if (this == 12) {
+        "12pm"
+    } else if (this > 12) {
+        "${this - 12}pm"
+    } else {
+        "${this}am"
     }
 }
 

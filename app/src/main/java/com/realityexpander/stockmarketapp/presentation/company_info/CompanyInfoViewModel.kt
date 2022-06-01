@@ -33,26 +33,11 @@ class CompanyInfoViewModel @Inject constructor(
 
             // make calls in parallel
             val companyInfoResult = async { repository.getCompanyInfo(symbol) }
-//            val intradayInfoResult = async { repository.getIntradayInfo(symbol) }
-
-            val fmt = DateTimeFormatter.ofPattern(DateFormatterPattern)
             val intradayInfoResult = async {
-                val response: Resource<List<IntradayInfo>> = Resource.Success(listOf<IntradayInfo>(
-                    IntradayInfo(LocalDateTime.parse("2020-05-31 01:00:00",fmt), close = 50.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
-                    IntradayInfo(LocalDateTime.parse("2020-05-31 02:00:00",fmt), close = 60.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
-                    IntradayInfo(LocalDateTime.parse("2020-05-31 03:00:00",fmt), close = 70.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
-                    IntradayInfo(LocalDateTime.parse("2020-05-31 04:00:00",fmt), close = 30.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
-                    IntradayInfo(LocalDateTime.parse("2020-05-31 05:00:00",fmt), close = 120.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
-                    IntradayInfo(LocalDateTime.parse("2020-05-31 06:00:00",fmt), close = 50.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
-                    IntradayInfo(LocalDateTime.parse("2020-05-31 07:00:00",fmt), close = 60.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
-                    IntradayInfo(LocalDateTime.parse("2020-05-31 08:00:00",fmt), close = 70.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
-                    IntradayInfo(LocalDateTime.parse("2020-05-31 09:00:00",fmt), close = 80.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
-                    IntradayInfo(LocalDateTime.parse("2020-05-31 10:00:00",fmt), close = 20.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
-                    IntradayInfo(LocalDateTime.parse("2020-05-31 11:00:00",fmt), close = 10.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
-                    IntradayInfo(LocalDateTime.parse("2020-05-31 13:00:00",fmt), close = 90.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
-                ))
-                response
+                repository.getIntradayInfo(symbol)
+                // intradayInfoResultSample() // Sample data
             }
+
 
             state = when (val result = companyInfoResult.await()) {
                 is Resource.Success -> {
@@ -101,4 +86,23 @@ class CompanyInfoViewModel @Inject constructor(
         }
     }
 
+}
+
+fun intradayInfoResultSample(): Resource<List<IntradayInfo>> {
+    val fmt = DateTimeFormatter.ofPattern(DateFormatterPattern)
+    val response: Resource<List<IntradayInfo>> = Resource.Success(listOf<IntradayInfo>(
+        IntradayInfo(LocalDateTime.parse("2020-05-31 01:00:00",fmt), close = 50.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
+        IntradayInfo(LocalDateTime.parse("2020-05-31 02:00:00",fmt), close = 60.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
+        IntradayInfo(LocalDateTime.parse("2020-05-31 03:00:00",fmt), close = 70.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
+        IntradayInfo(LocalDateTime.parse("2020-05-31 04:00:00",fmt), close = 30.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
+        IntradayInfo(LocalDateTime.parse("2020-05-31 05:00:00",fmt), close = 120.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
+        IntradayInfo(LocalDateTime.parse("2020-05-31 06:00:00",fmt), close = 50.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
+        IntradayInfo(LocalDateTime.parse("2020-05-31 07:00:00",fmt), close = 60.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
+        IntradayInfo(LocalDateTime.parse("2020-05-31 08:00:00",fmt), close = 70.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
+        IntradayInfo(LocalDateTime.parse("2020-05-31 09:00:00",fmt), close = 80.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
+        IntradayInfo(LocalDateTime.parse("2020-05-31 10:00:00",fmt), close = 20.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
+        IntradayInfo(LocalDateTime.parse("2020-05-31 11:00:00",fmt), close = 10.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
+        IntradayInfo(LocalDateTime.parse("2020-05-31 13:00:00",fmt), close = 90.0, high = 0.0, low = 0.0, open = 0.0, volume = 100),
+    ))
+    return response
 }

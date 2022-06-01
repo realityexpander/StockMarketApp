@@ -27,7 +27,7 @@ fun CompanyInfoScreen(
 ) {
     val state = viewModel.state
 
-    if(state.errorMessage == null) {
+    if (state.errorMessage == null) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -85,9 +85,16 @@ fun CompanyInfoScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(text = "Market Summary")
+                Text(
+                    text = "Market Summary for " +
+                            if (state.stockIntradayInfos.isEmpty()) "today" else {
+                                state.stockIntradayInfos.first().datetime.month.name.toTitlecase() + " " +
+                                        state.stockIntradayInfos.first().datetime.dayOfMonth.toString() + ", " +
+                                        state.stockIntradayInfos.first().datetime.year.toString()
+                            },
+                )
                 Spacer(modifier = Modifier.height(32.dp))
-                if(state.stockIntradayInfos.isNotEmpty()) {
+                if (state.stockIntradayInfos.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(32.dp))
                     StockChart(
                         modifier = Modifier
@@ -97,7 +104,7 @@ fun CompanyInfoScreen(
                         infos = state.stockIntradayInfos,
                     )
                 }
-                if(state.stockIntradayInfos.isEmpty() && !state.isLoading){
+                if (state.stockIntradayInfos.isEmpty() && !state.isLoading) {
                     Text(
                         text = "Data not available.",
                         color = MaterialTheme.colors.error
@@ -110,14 +117,25 @@ fun CompanyInfoScreen(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Center
     ) {
-        if(state.isLoading) {
+        if (state.isLoading) {
             CircularProgressIndicator()
         }
-        if(state.errorMessage != null && !state.isLoading) {
+        if (state.errorMessage != null && !state.isLoading) {
             Text(
                 text = state.errorMessage,
                 color = MaterialTheme.colors.error
             )
         }
     }
+}
+
+// Make first char uppercase and rest lowercase
+private fun String.toTitlecase(): String {
+    return this.lowercase()
+        .split(" ")
+        .joinToString("") { string ->
+            string.replaceFirstChar { firstChar ->
+                firstChar.uppercaseChar()
+            }
+        }
 }
