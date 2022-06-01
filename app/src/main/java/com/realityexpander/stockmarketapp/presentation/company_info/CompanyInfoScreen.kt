@@ -94,7 +94,7 @@ fun CompanyInfoScreen(
                             .fillMaxWidth()
                             .height(250.dp)
                             .align(CenterHorizontally),
-                        infos2 = state.stockIntradayInfos,
+                        infos = state.stockIntradayInfos,
                     )
                 }
                 if(state.stockIntradayInfos.isEmpty() && !state.isLoading){

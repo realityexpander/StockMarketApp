@@ -61,6 +61,10 @@ class StockRepositoryImpl @Inject constructor(
                 e.printStackTrace()
                 emit(Resource.Error(e.localizedMessage ?: "Error with network for company listings"))
                 null
+            } catch (e: Exception) { // other error
+                e.printStackTrace()
+                emit(Resource.Error("$e" ?: "Unknown Error loading or parsing company listings"))
+                null
             }
 
             // Save to local cache.
