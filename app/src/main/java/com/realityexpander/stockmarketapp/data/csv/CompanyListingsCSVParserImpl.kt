@@ -4,6 +4,7 @@ import com.opencsv.CSVReader
 import com.realityexpander.stockmarketapp.domain.model.CompanyListing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
 import javax.inject.Inject
@@ -18,6 +19,13 @@ class CompanyListingsCSVParserImpl @Inject constructor(): CSVParser<CompanyListi
         return withContext(Dispatchers.IO) {
             csvReader
                 .readAll()
+                .also { array ->
+                    // Hit limit for free API?
+                    if(array.size == 3 && array[1][0].contains("Note")) {
+                        csvReader.close()
+                        throw IOException("Hit free API limit\n\n${array[1][0]}")
+                    }
+                }
                 .drop(1) // drop header row
                 .mapNotNull { line ->
                     val (symbol, name, exchange) = line
