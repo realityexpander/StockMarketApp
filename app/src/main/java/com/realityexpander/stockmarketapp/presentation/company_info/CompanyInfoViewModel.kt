@@ -89,6 +89,10 @@ class CompanyInfoViewModel @Inject constructor(
 
 }
 
+
+
+// Sample data
+
 fun intradayInfoResultSample(): Resource<List<IntradayInfo>> {
     val fmt = DateTimeFormatter.ofPattern(DateFormatterPattern)
     return Resource.Success(
