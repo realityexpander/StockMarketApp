@@ -67,7 +67,8 @@ fun StockChart(
         (0..5).forEach { i ->
             drawContext.canvas.nativeCanvas.apply {
                 drawText(
-                    "$"+((i.toFloat() * priceStep) + lowerPrice).roundToDecimalPlaces(1).toString(),
+                    "$"+((i.toFloat() * priceStep) + lowerPrice)
+                        .roundToDecimalPlaces(1).toString(),
                     30f,
                     size.height - spacing - (i * size.height / 5f),
                     textPaint
@@ -129,6 +130,7 @@ fun StockChart(
         val fillPath = android.graphics.Path(strokePath.asAndroidPath())
             .asComposePath()
             .apply {
+                // end the path at the last point back to the start
                 lineTo(lastX, size.height - spacing/2)
                 lineTo(spacing, size.height - spacing/2)
                 close()
