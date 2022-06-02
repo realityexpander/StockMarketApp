@@ -1,5 +1,5 @@
 # StockMarketApp
-Stock Tracking App using CLEAN architecture, uses Hilt, Room, Compose, Coroutines, Retrofit, www.alphavantage.co API
+Stock Tracking App using SOLID architecture, uses Hilt, Room, Compose, Coroutines, Retrofit, www.alphavantage.co API
 
 [<img src="https://user-images.githubusercontent.com/5157474/171551314-c0e1dd15-310a-4808-9c25-1be2749a0980.png" width="350"/>](https://user-images.githubusercontent.com/5157474/171551314-c0e1dd15-310a-4808-9c25-1be2749a0980.png)
 [<img src="https://user-images.githubusercontent.com/5157474/171551338-c5dd5906-d6cf-4316-b2ef-5273c0632dff.png" width="350"/>](https://user-images.githubusercontent.com/5157474/171551338-c5dd5906-d6cf-4316-b2ef-5273c0632dff.png)
