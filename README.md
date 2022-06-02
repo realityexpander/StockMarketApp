@@ -6,15 +6,18 @@ Stock Tracking App using CLEAN architecture, uses Hilt, Room, Compose, Coroutine
 
 
 - Allows users to search for stock by name or stock symbol
-- Displays custom graph and shows how to use text in a compose canvas
+- Displays custom graph
 - Search is interruptable
 
 ---- Tech used ----
 - List of stocks is cached locally in a Room database
 - Uses custom query for Room database
-- Shows proper use of Hilt & CLEAN architecture
+- Shows proper use of Dagger-Hilt & SOLID architecture
 - Uses compose for view layer, ViewModel and mutableState to send UI events
 - Uses Resource sealed class to handle errors and messaging
+- Custom CSV parsers using OpenCSV for Company Listings and Intraday price info
+- Custom canvas drawing using interop to android XML text rendering
+- Graph uses Bezier curves
 
 To install the Apk:
 
