@@ -6,6 +6,8 @@ import com.realityexpander.stockmarketapp.domain.model.IntradayInfo
 data class CompanyInfoState(
     val stockIntradayInfos: List<IntradayInfo> = emptyList(),
     val companyInfo: CompanyInfo? = null,
-    val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val isLoadingStockIntradayInfos: Boolean = false,
+    val isLoadingCompanyInfo: Boolean = false,
+    val errorMessageStockIntradayInfos: String? = null,
+    val errorMessageCompanyInfo: String? = null
 )

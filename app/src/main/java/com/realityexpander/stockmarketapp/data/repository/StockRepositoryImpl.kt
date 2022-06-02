@@ -107,7 +107,12 @@ class StockRepositoryImpl @Inject constructor(
     override suspend fun getCompanyInfo(stockSymbol: String): Resource<CompanyInfo> {
         return try {
             val response = api.getCompanyInfo(stockSymbol)
-            Resource.Success(response.toCompanyInfo())
+
+            if (response.companyName == null) {
+                Resource.Error("Company not found, please try again later.")
+            } else {
+                Resource.Success(response.toCompanyInfo())
+            }
         } catch (e: IOException) { // parse error
             e.printStackTrace()
             Resource.Error(e.localizedMessage ?: "Error loading or parsing company info")

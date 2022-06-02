@@ -20,6 +20,7 @@ interface StockRepository {
         stockSymbol: String,
     ): Resource<List<IntradayInfo>>
 
+//     To be implemented in the future
 //    fun getStock(symbol: String): CompanyListing
 //    fun addStock(stock: Stock)
 //    fun removeStock(symbol: String)

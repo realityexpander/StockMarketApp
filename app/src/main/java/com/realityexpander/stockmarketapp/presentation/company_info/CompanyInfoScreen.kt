@@ -27,14 +27,14 @@ fun CompanyInfoScreen(
 ) {
     val state = viewModel.state
 
-    if (state.errorMessage == null) {
+    if (state.errorMessageCompanyInfo == null && state.companyInfo != null) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(DarkBlue)
                 .padding(16.dp)
         ) {
-            state.companyInfo?.let { company ->
+            state.companyInfo.let { company ->
                 Text(
                     text = company.companyName,
                     fontWeight = FontWeight.Bold,
@@ -104,7 +104,7 @@ fun CompanyInfoScreen(
                         infos = state.stockIntradayInfos,
                     )
                 }
-                if (state.stockIntradayInfos.isEmpty() && !state.isLoading) {
+                if (state.stockIntradayInfos.isEmpty() && !state.isLoadingStockIntradayInfos) {
                     Text(
                         text = "Data not available.",
                         color = MaterialTheme.colors.error
@@ -117,14 +117,24 @@ fun CompanyInfoScreen(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Center
     ) {
-        if (state.isLoading) {
+        if (state.isLoadingStockIntradayInfos || state.isLoadingCompanyInfo) {
             CircularProgressIndicator()
         }
-        if (state.errorMessage != null && !state.isLoading) {
+
+        // Show error message if any
+        Spacer(modifier = Modifier.height(32.dp))
+        if (state.errorMessageCompanyInfo != null && !state.isLoadingCompanyInfo) {
             Text(
-                text = state.errorMessage,
+                text = state.errorMessageCompanyInfo,
                 color = MaterialTheme.colors.error
             )
+        } else {
+            if (state.errorMessageStockIntradayInfos != null && !state.isLoadingStockIntradayInfos) {
+                Text(
+                    text = state.errorMessageStockIntradayInfos,
+                    color = MaterialTheme.colors.error
+                )
+            }
         }
     }
 }
