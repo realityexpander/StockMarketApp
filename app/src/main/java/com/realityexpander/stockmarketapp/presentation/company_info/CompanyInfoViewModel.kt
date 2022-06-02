@@ -29,12 +29,14 @@ class CompanyInfoViewModel @Inject constructor(
 
         viewModelScope.launch {
             val symbol = savedStateHandle.get<String>("symbol") ?: return@launch
-            state = state.copy(isLoadingStockIntradayInfos = true, isLoadingCompanyInfo = true)
+            state = state.copy(isLoadingIntradayInfos = true, isLoadingCompanyInfo = true)
 
             // make calls in parallel
-            val companyInfoResult = async { repository.getCompanyInfo(symbol) }
-            val intradayInfoResult = async {
-                repository.getIntradayInfo(symbol)
+            val companyInfoResult = async {
+                repository.getCompanyInfo(symbol)
+            }
+            val intradayInfosResult = async {
+                repository.getIntradayInfos(symbol)
                 // intradayInfoResultSample2() // Sample data
             }
 
@@ -56,28 +58,28 @@ class CompanyInfoViewModel @Inject constructor(
                 is Resource.Loading -> state // do nothing
             }
 
-            state = when (val result = intradayInfoResult.await()) {
+            state = when (val result = intradayInfosResult.await()) {
                 is Resource.Success -> {
                     if (result.data == null) {
                         state.copy(
-                            isLoadingStockIntradayInfos = false,
-                            errorMessageStockIntradayInfos = "Data not available.",
-                            stockIntradayInfos = emptyList()
+                            isLoadingIntradayInfos = false,
+                            errorMessageIntradayInfos = "Data not available.",
+                            intradayInfos = emptyList()
                         )
                     } else {
                         state.copy(
-                            isLoadingStockIntradayInfos = false,
-                            stockIntradayInfos = result.data,
-                            errorMessageStockIntradayInfos = null
+                            isLoadingIntradayInfos = false,
+                            intradayInfos = result.data,
+                            errorMessageIntradayInfos = null
                         )
                     }
 
                 }
                 is Resource.Error -> {
                     state.copy(
-                        isLoadingStockIntradayInfos = false,
-                        errorMessageStockIntradayInfos = result.message,
-                        stockIntradayInfos = emptyList()
+                        isLoadingIntradayInfos = false,
+                        errorMessageIntradayInfos = result.message,
+                        intradayInfos = emptyList()
                     )
                 }
                 is Resource.Loading -> state // do nothing

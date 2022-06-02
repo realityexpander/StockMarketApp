@@ -86,10 +86,10 @@ class StockRepositoryImpl @Inject constructor(
     }
 
 
-    override suspend fun getIntradayInfo(stockSymbol: String): Resource<List<IntradayInfo>> {
+    override suspend fun getIntradayInfos(stockSymbol: String): Resource<List<IntradayInfo>> {
         return try {
             val response = api.getIntradayInfo(stockSymbol).byteStream()
-            // println(response.readBytes().toString(Charsets.UTF_8))
+            // println(response.readBytes().toString(Charsets.UTF_8)) // keep for debugging
             val results = intradayInfoCSVParser.parse(response)
             Resource.Success(results)
         } catch (e: IOException) { // parse error
@@ -108,8 +108,9 @@ class StockRepositoryImpl @Inject constructor(
         return try {
             val response = api.getCompanyInfo(stockSymbol)
 
-            if (response.companyName == null) {
-                Resource.Error("Company not found, please try again later.")
+            // Check for API limit hit
+            if (response.companyName == null) { // call doesn't fail, just returns null data.
+                Resource.Error("API limit reached, please try again later.")
             } else {
                 Resource.Success(response.toCompanyInfo())
             }

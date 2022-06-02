@@ -87,24 +87,24 @@ fun CompanyInfoScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = "Market Summary for " +
-                            if (state.stockIntradayInfos.isEmpty()) "today" else {
-                                state.stockIntradayInfos.first().datetime.month.name.toTitlecase() + " " +
-                                        state.stockIntradayInfos.first().datetime.dayOfMonth.toString() + ", " +
-                                        state.stockIntradayInfos.first().datetime.year.toString()
+                            if (state.intradayInfos.isEmpty()) "today" else {
+                                state.intradayInfos.first().datetime.month.name.toTitlecase() + " " +
+                                        state.intradayInfos.first().datetime.dayOfMonth.toString() + ", " +
+                                        state.intradayInfos.first().datetime.year.toString()
                             },
                 )
                 Spacer(modifier = Modifier.height(32.dp))
-                if (state.stockIntradayInfos.isNotEmpty()) {
+                if (state.intradayInfos.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(32.dp))
                     StockChart(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(250.dp)
                             .align(CenterHorizontally),
-                        infos = state.stockIntradayInfos,
+                        infos = state.intradayInfos,
                     )
                 }
-                if (state.stockIntradayInfos.isEmpty() && !state.isLoadingStockIntradayInfos) {
+                if (state.intradayInfos.isEmpty() && !state.isLoadingIntradayInfos) {
                     Text(
                         text = "Data not available.",
                         color = MaterialTheme.colors.error
@@ -117,7 +117,7 @@ fun CompanyInfoScreen(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Center
     ) {
-        if (state.isLoadingStockIntradayInfos || state.isLoadingCompanyInfo) {
+        if (state.isLoadingIntradayInfos || state.isLoadingCompanyInfo) {
             CircularProgressIndicator()
         }
 
@@ -129,9 +129,9 @@ fun CompanyInfoScreen(
                 color = MaterialTheme.colors.error
             )
         } else {
-            if (state.errorMessageStockIntradayInfos != null && !state.isLoadingStockIntradayInfos) {
+            if (state.errorMessageIntradayInfos != null && !state.isLoadingIntradayInfos) {
                 Text(
-                    text = state.errorMessageStockIntradayInfos,
+                    text = state.errorMessageIntradayInfos,
                     color = MaterialTheme.colors.error
                 )
             }
