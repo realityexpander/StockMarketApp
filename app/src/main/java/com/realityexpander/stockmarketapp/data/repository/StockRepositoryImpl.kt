@@ -90,6 +90,7 @@ class StockRepositoryImpl @Inject constructor(
         return try {
             val response = api.getIntradayInfo(stockSymbol).byteStream()
             // println(response.readBytes().toString(Charsets.UTF_8)) // keep for debugging
+
             val results = intradayInfoCSVParser.parse(response)
             Resource.Success(results)
         } catch (e: IOException) { // parse error
