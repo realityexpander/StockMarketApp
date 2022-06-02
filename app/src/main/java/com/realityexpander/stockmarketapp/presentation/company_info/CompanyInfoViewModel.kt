@@ -34,8 +34,8 @@ class CompanyInfoViewModel @Inject constructor(
             // make calls in parallel
             val companyInfoResult = async { repository.getCompanyInfo(symbol) }
             val intradayInfoResult = async {
-                repository.getIntradayInfo(symbol)
-//                 intradayInfoResultSample2() // Sample data
+//                repository.getIntradayInfo(symbol)
+                 intradayInfoResultSample2() // Sample data
             }
 
 
@@ -109,21 +109,22 @@ fun intradayInfoResultSample(): Resource<List<IntradayInfo>> {
 fun intradayInfoResultSample2(): Resource<List<IntradayInfo>> {
     val fmt = DateTimeFormatter.ofPattern(DateFormatterPattern)
     return Resource.Success(listOf<IntradayInfo>(
-        IntradayInfo(LocalDateTime.parse("2022-05-31 20:00:00",fmt), close = 61.9500,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 19:00:00",fmt), close = 61.7000,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 17:00:00",fmt), close = 61.5000,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 16:00:00",fmt), close = 61.7100,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 15:00:00",fmt), close = 61.5500,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 14:00:00",fmt), close = 63.1700,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 13:00:00",fmt), close = 63.2500,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 12:00:00",fmt), close = 62.7150,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 11:00:00",fmt), close = 63.4100,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 10:00:00",fmt), close = 64.3200,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 09:00:00",fmt), close = 65.7000,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 07:00:00",fmt), close = 64.5000,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 08:00:00",fmt), close = 61.7100,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 05:00:00",fmt), close = 64.9600,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 04:00:00",fmt), close = 61.0000,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-        IntradayInfo(LocalDateTime.parse("2022-05-31 04:00:00",fmt), close = 60.8200,high = 0.0, low = 0.0, open = 0.0, volume = 100),
-    ))
+            IntradayInfo(LocalDateTime.parse("2022-05-31 20:00:00",fmt), close = 61.9500,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 19:00:00",fmt), close = 61.7000,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 17:00:00",fmt), close = 61.5000,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 16:00:00",fmt), close = 61.7100,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 15:00:00",fmt), close = 61.5500,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 14:00:00",fmt), close = 63.1700,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 13:00:00",fmt), close = 63.2500,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 12:00:00",fmt), close = 62.7150,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 11:00:00",fmt), close = 63.4100,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 10:00:00",fmt), close = 64.3200,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 09:00:00",fmt), close = 65.7000,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 07:00:00",fmt), close = 64.5000,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 08:00:00",fmt), close = 61.7100,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 06:00:00",fmt), close = 64.9600,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 05:00:00",fmt), close = 61.0000,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+            IntradayInfo(LocalDateTime.parse("2022-05-31 04:00:00",fmt), close = 60.8200,high = 0.0, low = 0.0, open = 0.0, volume = 100),
+        ).reversed()
+    )
 }

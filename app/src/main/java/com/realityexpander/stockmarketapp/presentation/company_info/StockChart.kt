@@ -115,7 +115,7 @@ fun StockChart(
         // Setup graph curve
         val strokePath = Path().apply {
             val height = size.height
-            val drawMode = GraphLineMode.Line
+            val drawMode = GraphLineMode.Bezier
 
             for (i in infos.indices) {
                 when (drawMode) {
