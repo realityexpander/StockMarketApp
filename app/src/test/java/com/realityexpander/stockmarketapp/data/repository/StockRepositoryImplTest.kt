@@ -28,16 +28,6 @@ import java.time.LocalDateTime
 @ExperimentalCoroutinesApi
 class StockRepositoryImplTest {
 
-    // Setup stale database data
-    private val staleCompanyListings = listOf(
-        CompanyListingEntity(
-            name = "test-name",
-            symbol = "test-symbol",
-            exchange = "test-exchange",
-            id = 0
-        )
-    )
-
     // Setup fresh remote data with 100 companies
     private val freshCompanyListingsFromRemote = (1..100).map {
         CompanyListing(
@@ -107,9 +97,19 @@ class StockRepositoryImplTest {
     // 2. Remote fetch gets 100 fresh items.
     // 3. DB is cleared of all items and newly fetched items are inserted.
     // 4. DB emits the 100 fresh items (and no stale items)
-    fun `Local database cache will be overwritten with remote when fetch = true`() = runTest {
+    fun `Local database cache will be overwritten with remote data when fetch = true`() = runTest {
 
-        // ARRANGE - Insert 1 item into the DB (stale data)
+        // ARRANGE
+        // Setup stale database data - Insert 1 item into the DB (stale data)
+        val staleCompanyListings =
+            listOf(
+                CompanyListingEntity(
+                    name = "test-name",
+                    symbol = "test-symbol",
+                    exchange = "test-exchange",
+                    id = 0
+                )
+            )
         stockDaoFake.insertCompanyListings(staleCompanyListings)
 
         // ACT/ASSERT - check the flow of flow emissions from the repository
@@ -147,16 +147,16 @@ class StockRepositoryImplTest {
             assertThat((stopLoading as Resource.Loading).isLoading).isFalse()
 
             awaitComplete()
-        }
+        }impr
     }
 
     @Test
     // 1. Remote fetch gets 100 fresh items.
     // 2. Response is Success and item count is 100.
-    fun `getIntradayInfos will be fetched from remote api`() = runTest {
+    fun `getIntradayInfos will fetched from remote api successfully`() = runTest {
 
         // ARRANGE
-        /* nothing to arrange */
+        /* uses default arrangement */
 
         // ACT
         val apiResponse = repository.getIntradayInfos("GOOGL")
@@ -307,7 +307,6 @@ class StockRepositoryImplTest {
         assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
         assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedErrorMessage)
     }
-
 
 }
 
