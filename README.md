@@ -1,4 +1,4 @@
-# StockMarketApp
+# Stock Market Info App
 Stock Tracking App using SOLID architecture, uses Hilt, Room, Compose, Coroutines, Retrofit, www.alphavantage.co API
 
 [<img src="https://user-images.githubusercontent.com/5157474/171551314-c0e1dd15-310a-4808-9c25-1be2749a0980.png" width="350"/>](https://user-images.githubusercontent.com/5157474/171551314-c0e1dd15-310a-4808-9c25-1be2749a0980.png)
@@ -8,14 +8,15 @@ Stock Tracking App using SOLID architecture, uses Hilt, Room, Compose, Coroutine
 - Allows users to search for stock by name or stock symbol
 - Displays custom graph
 - Search is interruptable
+- Search data is cached
 
 ---- Tech used ----
-- List of stocks is cached locally in a Room database
-- Uses custom query for Room database
-- Shows proper use of Dagger-Hilt & SOLID architecture
-- Uses compose for view layer, ViewModel and mutableState to send UI events
+- List of stocks is cached locally in a `Room` database
+- Uses custom query for `Room` database
+- Shows proper use of `Dagger-Hilt` & SOLID architecture
+- Uses compose for view layer, `ViewModel` and `mutableState` to send UI events
 - Uses Resource sealed class to handle errors and messaging
-- Custom CSV parsers using OpenCSV for Company Listings and Intraday price info
+- Custom CSV parsers using `OpenCSV` for Company Listings and Intraday price info
 - Custom canvas drawing using interop to android XML text rendering
 - Graph uses Bezier curves
 
