@@ -9,7 +9,7 @@ import com.realityexpander.stockmarketapp.data.remote.dto.StockApi
 import com.realityexpander.stockmarketapp.domain.model.CompanyInfo
 import com.realityexpander.stockmarketapp.domain.model.CompanyListing
 import com.realityexpander.stockmarketapp.domain.model.IntradayInfo
-import com.realityexpander.stockmarketapp.domain.repository.StockRepository
+import com.realityexpander.stockmarketapp.domain.repository.IStockRepository
 import com.realityexpander.stockmarketapp.util.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -24,7 +24,7 @@ class StockRepositoryImpl @Inject constructor(
     private val db: StockDatabase,
     private val companyListingsCSVParser: CSVParser<CompanyListing>,
     private val intradayInfoCSVParser: CSVParser<IntradayInfo>,
-): StockRepository {
+): IStockRepository {
 
     private val dao = db.dao
 
@@ -63,11 +63,11 @@ class StockRepositoryImpl @Inject constructor(
                 null
             } catch (e: Exception) { // other error
                 e.printStackTrace()
-                emit(Resource.Error("$e" ?: "Unknown Error loading or parsing company listings"))
+                emit(Resource.Error(e.localizedMessage ?: "Unknown Error loading or parsing company listings"))
                 null
             }
 
-            // Save to local cache.
+            // Refresh local cache with new data from remote.
             remoteListings?.let { listings ->
                 dao.clearCompanyListings()
                 dao.insertCompanyListings(
@@ -88,10 +88,10 @@ class StockRepositoryImpl @Inject constructor(
 
     override suspend fun getIntradayInfos(stockSymbol: String): Resource<List<IntradayInfo>> {
         return try {
-            val response = api.getIntradayInfo(stockSymbol).byteStream()
+            val response = api.getIntradayInfo(stockSymbol)
             // println(response.readBytes().toString(Charsets.UTF_8)) // keep for debugging
 
-            val results = intradayInfoCSVParser.parse(response)
+            val results = intradayInfoCSVParser.parse(response.byteStream())
             Resource.Success(results)
         } catch (e: IOException) { // parse error
             e.printStackTrace()
@@ -101,7 +101,7 @@ class StockRepositoryImpl @Inject constructor(
             Resource.Error(e.localizedMessage ?: "Error with network for intraday info")
         } catch (e: Exception) { // unknown error
             e.printStackTrace()
-            Resource.Error("$e" ?: "Unknown Error loading or parsing intraday info")
+            Resource.Error(e.localizedMessage ?: "Unknown Error loading or parsing intraday info")
         }
     }
 
@@ -123,7 +123,7 @@ class StockRepositoryImpl @Inject constructor(
             Resource.Error(e.localizedMessage ?: "Error with network for company info")
         } catch (e: Exception) { // unknown error
             e.printStackTrace()
-            Resource.Error("$e" ?: "Unknown Error loading or parsing company info")
+            Resource.Error(e.localizedMessage ?: "Unknown Error loading or parsing company info")
         }
     }
 }

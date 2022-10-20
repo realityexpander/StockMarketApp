@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.realityexpander.stockmarketapp.domain.repository.StockRepository
+import com.realityexpander.stockmarketapp.domain.repository.IStockRepository
 import com.realityexpander.stockmarketapp.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CompanyListingsViewModel @Inject constructor(
-    private val repository: StockRepository
+    private val repository: IStockRepository
 ) : ViewModel() {
 
     var state by mutableStateOf(CompanyListingsState())

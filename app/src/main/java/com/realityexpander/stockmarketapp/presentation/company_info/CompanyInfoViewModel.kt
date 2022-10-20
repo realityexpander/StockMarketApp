@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.realityexpander.stockmarketapp.data.mapper.DateFormatterPattern
 import com.realityexpander.stockmarketapp.domain.model.IntradayInfo
-import com.realityexpander.stockmarketapp.domain.repository.StockRepository
+import com.realityexpander.stockmarketapp.domain.repository.IStockRepository
 import com.realityexpander.stockmarketapp.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -20,7 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CompanyInfoViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val repository: StockRepository
+    private val repository: IStockRepository
 ) : ViewModel() {
 
     var state by mutableStateOf(CompanyInfoState())

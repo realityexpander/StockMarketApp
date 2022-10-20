@@ -22,6 +22,7 @@ import com.realityexpander.stockmarketapp.ui.theme.DarkBlue
 @Composable
 @Destination
 fun CompanyInfoScreen(
+    @Suppress("UNUSED_PARAMETER")
     symbol: String,
     viewModel: CompanyInfoViewModel = hiltViewModel()
 ) {

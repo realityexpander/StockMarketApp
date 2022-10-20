@@ -16,7 +16,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton  //                      v-- this indicates this class is available to be injected via Hilt
-class IntradayInfoCSVParserImpl @Inject constructor() : CSVParser<IntradayInfo> {
+class IntradayInfosCSVParserImpl @Inject constructor() : CSVParser<IntradayInfo> {
 
     override suspend fun parse(csvStream: InputStream): List<IntradayInfo> {
         val csvReader = CSVReader(InputStreamReader(csvStream))
