@@ -147,7 +147,7 @@ class StockRepositoryImplTest {
             assertThat((stopLoading as Resource.Loading).isLoading).isFalse()
 
             awaitComplete()
-        }impr
+        }
     }
 
     @Test
