@@ -125,7 +125,7 @@ class StockRepositoryImplTest {
     // 2. Remote fetch gets 100 fresh items.
     // 3. DB is cleared of all items and newly fetched items are inserted.
     // 4. DB emits the 100 fresh items (and no stale items)
-    fun `Local database cache will be overwritten with remote data when fetch = true`() = runTest {
+    fun `Local database cache will be overwritten with fresh remote data when fetch = true`() = runTest {
 
         // ARRANGE
         // Setup stale database data - Insert 1 item into the DB (stale data)
@@ -187,7 +187,7 @@ class StockRepositoryImplTest {
     @Test
     // 1. DB has stale data (1 item).
     // 2. DB emits the 1 stale item.
-    fun `Local database cache will be returned when fetch = false`() = runTest {
+    fun `Local database cache stale data will be returned when fetch = false`() = runTest {
 
         // ARRANGE
         // Setup stale database data - Insert 1 item into the DB (stale data)
