@@ -178,6 +178,8 @@ class StockRepositoryImplTest {
             assertThat((stopLoading as Resource.Loading).isLoading).isFalse()
 
             awaitComplete()
+            //cancelAndIgnoreRemainingEvents()
+            //cancelAndConsumeRemainingEvents()
 
             coVerify(exactly = 1) { spyRepositoryTest.getCompanyListings(any(), any()) }
             coVerify(exactly = 3) { spyStockDaoFake.searchCompanyListing(any()) }
