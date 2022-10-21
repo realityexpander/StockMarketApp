@@ -20,7 +20,7 @@ import javax.inject.Singleton
 
 @Singleton
 class StockRepositoryImpl @Inject constructor(
-    private val api: StockApi,
+    public val api: StockApi, // note: must make public(!) for this to work: use @MockK -> coEvery { xxx.api.func } coAnswers { xxx }
     private val db: StockDatabase,
     private val companyListingsCSVParser: CSVParser<CompanyListing>,
     private val intradayInfoCSVParser: CSVParser<IntradayInfo>,

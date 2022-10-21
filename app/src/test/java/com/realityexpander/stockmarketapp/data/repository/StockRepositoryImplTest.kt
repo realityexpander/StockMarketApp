@@ -16,11 +16,9 @@ import com.realityexpander.stockmarketapp.domain.model.IntradayInfo
 import com.realityexpander.stockmarketapp.util.Resource
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -29,8 +27,7 @@ import retrofit2.Response
 import java.io.IOException
 import java.time.LocalDateTime
 import kotlin.reflect.cast
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import kotlinx.coroutines.Dispatchers
+import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.test.*
 
 // Articles on testing:
@@ -79,9 +76,12 @@ class StockRepositoryImplTest {
 
     //private val testDispatcher = StandardTestDispatcher()
 
+    @MockK(relaxed = true)
+    lateinit var repositoryTestWithMockAnnotation: StockRepositoryImpl
+
     @Before
     fun setUp() {
-        //MockKAnnotations.init(this)
+        MockKAnnotations.init(this)
         //Dispatchers.setMain(testDispatcher)
 
         // Mock the StockApi - getListOfStocks() returns a stub that is a no-op
@@ -368,26 +368,52 @@ class StockRepositoryImplTest {
             )
         )
 
-        // getIntradayInfos() throws an HttpException
-        val stockApiMockk: StockApi = mockk(relaxed = true) {
-            coEvery { getIntradayInfoRawCSV(any()) } coAnswers {
-                throw expectedException
+        // Using @MockK annotation style - must make constructor values public to use this style!!
+        if (true) {
+            // Un-mock getIntradayInfos method
+            coEvery { repositoryTestWithMockAnnotation.getIntradayInfos(any()) } coAnswers {
+                callOriginal()
             }
+
+            // Un-mock getIntradayInfoRawCSV method (requires `api` param to be public!!!)
+            coEvery { repositoryTestWithMockAnnotation.api } coAnswers {
+                mockk(relaxed = true) {
+                    coEvery { getIntradayInfoRawCSV(any()) } throws expectedException
+                }
+            }
+
+//            // Un-mock getIntradayInfoRawCSV method (requires `api` param to be public!!!)
+//            coEvery { repositoryTestWithMockAnnotation.api.getIntradayInfoRawCSV(any()) } coAnswers {
+//                throw expectedException
+//            }
+
+            repositoryTest = repositoryTestWithMockAnnotation
         }
 
-        // Create object under test with above dependencies
-        repositoryTest = StockRepositoryImpl(
-            api = stockApiMockk,
-            db = stockDatabaseMockk,
-            companyListingsCSVParser = companyListingsCSVParserMockk,
-            intradayInfoCSVParser = intradayInfosCSVParserMockk
-        )
+        // Using "create object" style
+        if(false) {
+            // getIntradayInfos() throws an HttpException
+            val stockApiMockk: StockApi = mockk(relaxed = true) {
+                coEvery { getIntradayInfoRawCSV(any()) } coAnswers {
+                    throw expectedException
+                }
+            }
+
+            // Create object under test with above dependencies
+            repositoryTest = StockRepositoryImpl(
+                api = stockApiMockk,
+                db = stockDatabaseMockk,
+                companyListingsCSVParser = companyListingsCSVParserMockk,
+                intradayInfoCSVParser = intradayInfosCSVParserMockk
+            )
+        }
 
         runTest {
 //        runBlocking {
 
             // ACT
             val apiResponse = repositoryTest.getIntradayInfos("UNKNOWN_COMPANY_SYMBOL")
+//            val apiResponse = repositoryTest.getIntradayInfos("UNKNOWN_COMPANY_SYMBOL")
 //            val apiResponse = Resource.Error<String>("HTTP 404 Response.error()")
 
             //ASSERT
@@ -397,14 +423,14 @@ class StockRepositoryImplTest {
             assertThat((apiResponse as Resource.Error).message).isNotNull()
             @Suppress("useless_cast")
             assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.localizedMessage)
-            coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+//            coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
         }
     }
 
     @Test
     // 1. Remote fetch fails with general Exception.
     // 2. Response is Error and has error message.
-    fun `getIntradayInfos will fail due to fetch general exception`() = runTest {
+    fun `getIntradayInfos will fail due to fetch general exception`() {
 
         // ARRANGE
 
@@ -426,17 +452,19 @@ class StockRepositoryImplTest {
             intradayInfoCSVParser = intradayInfosCSVParserMockk
         )
 
-        // ACT
-        val apiResponse = repositoryTest.getIntradayInfos("UNKNOWN_COMPANY_SYMBOL")
+        runTest {
+            // ACT
+            val apiResponse = repositoryTest.getIntradayInfos("UNKNOWN_COMPANY_SYMBOL")
 
-        //ASSERT
-        // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
-        assertThat(apiResponse).isNotNull()
-        assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
-        assertThat((apiResponse as Resource.Error).message).isNotNull()
-        @Suppress("useless_cast")
-        assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.localizedMessage)
-        coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+            //ASSERT
+            // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
+            assertThat(apiResponse).isNotNull()
+            assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
+            assertThat((apiResponse as Resource.Error).message).isNotNull()
+            @Suppress("useless_cast")
+            assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.localizedMessage)
+            coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+        }
     }
 
     @Test
