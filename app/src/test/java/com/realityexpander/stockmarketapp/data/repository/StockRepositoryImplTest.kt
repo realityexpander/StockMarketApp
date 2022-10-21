@@ -17,8 +17,6 @@ import com.realityexpander.stockmarketapp.util.Resource
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runBlockingTest
-import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Before
@@ -32,6 +30,16 @@ import java.io.IOException
 import java.time.LocalDateTime
 import kotlin.reflect.cast
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.*
+
+// Articles on testing:
+// https://medium.com/swlh/kotlin-coroutines-in-android-unit-test-28ff280fc0d5
+
+// Testing livedata & other android components, dispatchers.
+// https://medium.com/swlh/unit-testing-with-kotlin-coroutines-the-android-way-19289838d257
+
+
 
 @ExperimentalCoroutinesApi
 @RunWith(JUnit4::class)
@@ -66,12 +74,15 @@ class StockRepositoryImplTest {
     private lateinit var companyListingsCSVParserMockk: CSVParser<CompanyListing>
     private lateinit var intradayInfosCSVParserMockk: CSVParser<IntradayInfo>
 
-    @get:Rule
-    var instantExecutorRule = InstantTaskExecutorRule()
+    //@get:Rule
+    //var instantExecutorRule = InstantTaskExecutorRule()
+
+    //private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setUp() {
-        MockKAnnotations.init(this)
+        //MockKAnnotations.init(this)
+        //Dispatchers.setMain(testDispatcher)
 
         // Mock the StockApi - getListOfStocks() returns a stub that is a no-op
         noOpStockApiMockk = mockk(relaxed = true) {
@@ -327,6 +338,7 @@ class StockRepositoryImplTest {
                 val apiResponse = repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
 
                 assertThat(true).isFalse() // should not reach this line
+                println("apiResponse = $apiResponse")
             } catch (e: Throwable) {
                 // ASSERT
                 assertThat(e).isInstanceOf(expectedException::class.java)
@@ -339,7 +351,7 @@ class StockRepositoryImplTest {
     }
 
     @Test
-    // 1. Remote fetch fails with HttpException.
+    // 1. Remote fetch fails with HttpException. ***
     // 2. Response is Error and has error message.
     fun `getIntradayInfos will fail due to fetch HttpException`() {
 
@@ -370,7 +382,6 @@ class StockRepositoryImplTest {
         )
 
         runTest {
-//        runBlockingTest {
 //        runBlocking {
 
             // ACT
@@ -421,6 +432,7 @@ class StockRepositoryImplTest {
         assertThat(apiResponse).isNotNull()
         assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
         assertThat((apiResponse as Resource.Error).message).isNotNull()
+        @Suppress("useless_cast")
         assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.localizedMessage)
         coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
     }
