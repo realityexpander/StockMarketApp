@@ -85,7 +85,6 @@ class StockRepositoryImpl @Inject constructor(
         }
     }
 
-
     override suspend fun getIntradayInfos(stockSymbol: String): Resource<List<IntradayInfo>> {
         return try {
             val response = api.getIntradayInfoRawCSV(stockSymbol)

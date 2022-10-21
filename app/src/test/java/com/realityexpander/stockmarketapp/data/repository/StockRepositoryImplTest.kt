@@ -16,19 +16,25 @@ import com.realityexpander.stockmarketapp.domain.model.IntradayInfo
 import com.realityexpander.stockmarketapp.util.Resource
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
 import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
 import java.time.LocalDateTime
-import kotlin.reflect.KClass
 import kotlin.reflect.cast
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 
 @ExperimentalCoroutinesApi
+@RunWith(JUnit4::class)
 class StockRepositoryImplTest {
 
     // Setup fresh remote data with 100 companies
@@ -52,19 +58,19 @@ class StockRepositoryImplTest {
         )
     }
 
-    private lateinit var repository: StockRepositoryImpl
+    private lateinit var repositoryTest: StockRepositoryImpl
     private lateinit var noOpStockApiMockk: StockApi
     private lateinit var stockDatabaseMockk: StockDatabase
     private lateinit var stockDaoFake: StockDao
+    private lateinit var spyStockDaoFake: StockDao
     private lateinit var companyListingsCSVParserMockk: CSVParser<CompanyListing>
     private lateinit var intradayInfosCSVParserMockk: CSVParser<IntradayInfo>
 
-//    @Rule
-//    val thrown: ExpectedException = ExpectedException.none()
+    @get:Rule
+    var instantExecutorRule = InstantTaskExecutorRule()
 
     @Before
     fun setUp() {
-
         MockKAnnotations.init(this)
 
         // Mock the StockApi - getListOfStocks() returns a stub that is a no-op
@@ -76,9 +82,12 @@ class StockRepositoryImplTest {
         // Fake the DAO - Simulates the DAO calls to the database
         stockDaoFake = StockDaoFake()
 
+        // setup spy on the Fake DAO
+        spyStockDaoFake = spyk(stockDaoFake)
+
         // Mock the StockDatabase - .dao returns the DAO Fake
         stockDatabaseMockk = mockk(relaxed = true) {
-            every { dao } returns stockDaoFake
+            every { dao } returns spyStockDaoFake
         }
 
         // Mock the CSVParser<CompanyListing> - parse() returns CompanyListing objects
@@ -92,7 +101,7 @@ class StockRepositoryImplTest {
         }
 
         // Create object under test with above dependencies
-        repository = StockRepositoryImpl(
+        repositoryTest = StockRepositoryImpl(
             api = noOpStockApiMockk,
             db = stockDatabaseMockk,
             companyListingsCSVParser = companyListingsCSVParserMockk,
@@ -101,7 +110,7 @@ class StockRepositoryImplTest {
     }
 
     @Test
-    // 1. DB has a stale date (1 item).
+    // 1. DB has stale data (1 item).
     // 2. Remote fetch gets 100 fresh items.
     // 3. DB is cleared of all items and newly fetched items are inserted.
     // 4. DB emits the 100 fresh items (and no stale items)
@@ -118,10 +127,13 @@ class StockRepositoryImplTest {
                     id = 0
                 )
             )
-        stockDaoFake.insertCompanyListings(staleCompanyListings)
+        spyStockDaoFake.insertCompanyListings(staleCompanyListings)
+
+        // setup spy on the repository under Test
+        val spyRepositoryTest = spyk(repositoryTest)
 
         // ACT/ASSERT - check the flow of flow emissions from the repository
-        repository.getCompanyListings(
+        spyRepositoryTest.getCompanyListings(
             fetchFromRemote = true,
             query = ""
         ).test {
@@ -144,7 +156,7 @@ class StockRepositoryImplTest {
             val freshCompanyListingsInDB = awaitItem()
             assertThat(freshCompanyListingsInDB is Resource.Success).isTrue()
             assertThat(
-                stockDaoFake.searchCompanyListing("").map {
+                spyStockDaoFake.searchCompanyListing("").map {
                     it.toCompanyListing()
                 }
             ).isEqualTo(
@@ -155,6 +167,62 @@ class StockRepositoryImplTest {
             assertThat((stopLoading as Resource.Loading).isLoading).isFalse()
 
             awaitComplete()
+
+            coVerify(exactly = 1) { spyRepositoryTest.getCompanyListings(any(), any()) }
+            coVerify(exactly = 3) { spyStockDaoFake.searchCompanyListing(any()) }
+        }
+    }
+
+    @Test
+    // 1. DB has stale data (1 item).
+    // 2. DB emits the 1 stale item.
+    fun `Local database cache will be returned when fetch = false`() = runTest {
+
+        // ARRANGE
+        // Setup stale database data - Insert 1 item into the DB (stale data)
+        val staleCompanyListings =
+            listOf(
+                CompanyListingEntity(
+                    name = "test-name",
+                    symbol = "test-symbol",
+                    exchange = "test-exchange",
+                    id = 0
+                )
+            )
+        spyStockDaoFake.insertCompanyListings(staleCompanyListings)
+
+        // setup spy on the repository under Test
+        val spyRepositoryTest = spyk(repositoryTest)
+
+        // ACT
+        spyRepositoryTest.getCompanyListings(
+            fetchFromRemote = false,
+            query = ""
+        ).test {
+
+            // ASSERT - check the flow of flow emissions from the repository
+            // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
+
+            val startLoading = awaitItem()
+            assertThat((startLoading as Resource.Loading).isLoading).isTrue()
+
+            val staleCompanyListingsInDB = awaitItem()
+            assertThat(staleCompanyListingsInDB is Resource.Success).isTrue()
+            assertThat(
+                staleCompanyListingsInDB.data
+            ).isEqualTo(
+                staleCompanyListings.map {
+                    it.toCompanyListing()
+                }
+            )
+
+            val stopLoading = awaitItem()
+            assertThat((stopLoading as Resource.Loading).isLoading).isFalse()
+
+            awaitComplete()
+
+            coVerify(exactly = 1) { spyRepositoryTest.getCompanyListings(any(), any()) }
+            coVerify(exactly = 1) { spyStockDaoFake.searchCompanyListing(any()) }
         }
     }
 
@@ -167,7 +235,7 @@ class StockRepositoryImplTest {
         /* uses default arrangement */
 
         // ACT
-        val apiResponse = repository.getIntradayInfos("GOOGL")
+        val apiResponse = repositoryTest.getIntradayInfos("GOOGL")
 
         //ASSERT
         // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
@@ -195,7 +263,7 @@ class StockRepositoryImplTest {
         }
 
         // Create object under test with above dependencies
-        repository = StockRepositoryImpl(
+        repositoryTest = StockRepositoryImpl(
             api = noOpStockApiMockk,
             db = stockDatabaseMockk,
             companyListingsCSVParser = companyListingsCSVParserMockk,
@@ -203,7 +271,7 @@ class StockRepositoryImplTest {
         )
 
         // ACT
-        val apiResponse = repository.getIntradayInfos("GOOGL")
+        val apiResponse = repositoryTest.getIntradayInfos("GOOGL")
 
         //ASSERT
         // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
@@ -211,7 +279,7 @@ class StockRepositoryImplTest {
         assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
         assertThat((apiResponse as Resource.Error).message).isNotNull()
         assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.localizedMessage)
-        coVerify { intradayInfosCSVParserMockk.parse(any()) }
+        coVerify(exactly = 1) { intradayInfosCSVParserMockk.parse(any()) }
     }
 
     @Test
@@ -228,7 +296,7 @@ class StockRepositoryImplTest {
         }
 
         // Create object under test with above dependencies
-        repository = StockRepositoryImpl(
+        repositoryTest = StockRepositoryImpl(
             api = noOpStockApiMockk,
             db = stockDatabaseMockk,
             companyListingsCSVParser = companyListingsCSVParserMockk,
@@ -238,7 +306,7 @@ class StockRepositoryImplTest {
         if (true) {
             // ACT
             val apiRes = runCatching {
-                repository.getIntradayInfosWithoutCatches("GOOGL")
+                repositoryTest.getIntradayInfosWithoutCatches("GOOGL")
 
                 assertThat(true).isFalse() // should not reach this line
             }.onFailure {
@@ -256,7 +324,7 @@ class StockRepositoryImplTest {
         if (false) {
             try {
                 // ACT
-                val apiResponse = repository.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
+                val apiResponse = repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
 
                 assertThat(true).isFalse() // should not reach this line
             } catch (e: Throwable) {
@@ -273,8 +341,7 @@ class StockRepositoryImplTest {
     @Test
     // 1. Remote fetch fails with HttpException.
     // 2. Response is Error and has error message.
-    @Suppress("useless_cast")
-    fun `getIntradayInfos will fail due to fetch HttpException`() = runTest {
+    fun `getIntradayInfos will fail due to fetch HttpException`() {
 
         // ARRANGE
         val expectedExceptionCode = 404
@@ -295,23 +362,30 @@ class StockRepositoryImplTest {
         }
 
         // Create object under test with above dependencies
-        repository = StockRepositoryImpl(
+        repositoryTest = StockRepositoryImpl(
             api = stockApiMockk,
             db = stockDatabaseMockk,
             companyListingsCSVParser = companyListingsCSVParserMockk,
             intradayInfoCSVParser = intradayInfosCSVParserMockk
         )
 
-        // ACT
-        val apiResponse = repository.getIntradayInfos("UNKNOWN_COMPANY_SYMBOL")
+        runTest {
+//        runBlockingTest {
+//        runBlocking {
 
-        //ASSERT
-        // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
-        assertThat(apiResponse).isNotNull()
-        assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
-        assertThat((apiResponse as Resource.Error).message).isNotNull()
-        assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.localizedMessage)
-        coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+            // ACT
+            val apiResponse = repositoryTest.getIntradayInfos("UNKNOWN_COMPANY_SYMBOL")
+//            val apiResponse = Resource.Error<String>("HTTP 404 Response.error()")
+
+            //ASSERT
+            // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
+            assertThat(apiResponse).isNotNull()
+            assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
+            assertThat((apiResponse as Resource.Error).message).isNotNull()
+            @Suppress("useless_cast")
+            assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.localizedMessage)
+            coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+        }
     }
 
     @Test
@@ -332,7 +406,7 @@ class StockRepositoryImplTest {
         }
 
         // Create object under test with above dependencies
-        repository = StockRepositoryImpl(
+        repositoryTest = StockRepositoryImpl(
             api = stockApiMockk,
             db = stockDatabaseMockk,
             companyListingsCSVParser = companyListingsCSVParserMockk,
@@ -340,7 +414,7 @@ class StockRepositoryImplTest {
         )
 
         // ACT
-        val apiResponse = repository.getIntradayInfos("UNKNOWN_COMPANY_SYMBOL")
+        val apiResponse = repositoryTest.getIntradayInfos("UNKNOWN_COMPANY_SYMBOL")
 
         //ASSERT
         // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
@@ -370,7 +444,7 @@ class StockRepositoryImplTest {
         }
 
         // Create object under test with above dependencies
-        repository = StockRepositoryImpl(
+        repositoryTest = StockRepositoryImpl(
             api = stockApiMockk,
             db = stockDatabaseMockk,
             companyListingsCSVParser = companyListingsCSVParserMockk,
@@ -378,7 +452,7 @@ class StockRepositoryImplTest {
         )
 
         // ACT
-        val apiResponse = repository.getIntradayInfos("GOOGL")
+        val apiResponse = repositoryTest.getIntradayInfos("GOOGL")
 
         //ASSERT
         // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
@@ -411,7 +485,7 @@ class StockRepositoryImplTest {
         }
 
         // Create object under test
-        repository = StockRepositoryImpl(
+        repositoryTest = StockRepositoryImpl(
             api = stockApiMockk,
             db = stockDatabaseMockk,
             companyListingsCSVParser = companyListingsCSVParserMockk,
@@ -421,7 +495,7 @@ class StockRepositoryImplTest {
         if (true) {
             // ACT
             val apiRes = runCatching {
-                repository.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
+                repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
 
                 assertThat(true).isFalse() // should not reach this line
             }.onFailure {
@@ -444,7 +518,7 @@ class StockRepositoryImplTest {
         if (false) {
             try {
                 // ACT
-                val apiResponse = repository.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
+                val apiResponse = repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
 
                 assertThat(true).isFalse() // should not reach this line
                 println("apiResponse: $apiResponse")
@@ -479,7 +553,7 @@ class StockRepositoryImplTest {
         }
 
         // Create object under test
-        repository = StockRepositoryImpl(
+        repositoryTest = StockRepositoryImpl(
             api = stockApiMockk,
             db = stockDatabaseMockk,
             companyListingsCSVParser = companyListingsCSVParserMockk,
@@ -489,7 +563,7 @@ class StockRepositoryImplTest {
         if (true) {
             // ACT
             val apiRes = runCatching {
-                repository.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
+                repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
 
                 assertThat(true).isFalse() // should not reach this line
             }.onFailure {
@@ -507,7 +581,7 @@ class StockRepositoryImplTest {
         if (false) {
             try {
                 // ACT
-                val apiResponse = repository.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
+                val apiResponse = repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
 
                 assertThat(true).isFalse() // should not reach this line
                 println("apiResponse: $apiResponse")
@@ -538,7 +612,7 @@ class StockRepositoryImplTest {
         }
 
         // Create object under test
-        repository = StockRepositoryImpl(
+        repositoryTest = StockRepositoryImpl(
             api = stockApiMockk,
             db = stockDatabaseMockk,
             companyListingsCSVParser = companyListingsCSVParserMockk,
@@ -548,7 +622,7 @@ class StockRepositoryImplTest {
         if (true) {
             // ACT
             val apiRes = runCatching {
-                repository.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
+                repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
 
                 assertThat(true).isFalse() // should not reach this line
             }.onFailure {
@@ -566,7 +640,7 @@ class StockRepositoryImplTest {
         if (false) {
             try {
                 // ACT
-                val apiResponse = repository.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
+                val apiResponse = repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
 
                 assertThat(true).isFalse() // should not reach this line
                 println("apiResponse: $apiResponse")
@@ -594,7 +668,7 @@ class StockRepositoryImplTest {
         }
 
         // Create object under test with above dependencies
-        repository = StockRepositoryImpl(
+        repositoryTest = StockRepositoryImpl(
             api = noOpStockApiMockk,
             db = stockDatabaseMockk,
             companyListingsCSVParser = companyListingsCSVParserMockk,
@@ -602,7 +676,7 @@ class StockRepositoryImplTest {
         )
 
         // ACT
-        val apiResponse = repository.getIntradayInfos("GOOGL")
+        val apiResponse = repositoryTest.getIntradayInfos("GOOGL")
 
         //ASSERT
         // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
@@ -631,7 +705,7 @@ class StockRepositoryImplTest {
         }
 
         // Create object under test with above dependencies
-        repository = StockRepositoryImpl(
+        repositoryTest = StockRepositoryImpl(
             api = stockApiMockk,
             db = stockDatabaseMockk,
             companyListingsCSVParser = companyListingsCSVParserMockk,
@@ -639,7 +713,7 @@ class StockRepositoryImplTest {
         )
 
         // ACT
-        val apiResponse = repository.getCompanyInfo("GOOGL")
+        val apiResponse = repositoryTest.getCompanyInfo("GOOGL")
 
         //ASSERT
         // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
@@ -671,7 +745,7 @@ class StockRepositoryImplTest {
         }
 
         // Create object under test with above dependencies
-        repository = StockRepositoryImpl(
+        repositoryTest = StockRepositoryImpl(
             api = stockApiMockk,
             db = stockDatabaseMockk,
             companyListingsCSVParser = companyListingsCSVParserMockk,
@@ -679,7 +753,7 @@ class StockRepositoryImplTest {
         )
 
         // ACT
-        val apiResponse = repository.getCompanyInfo("GOOGL")
+        val apiResponse = repositoryTest.getCompanyInfo("GOOGL")
 
         //ASSERT
         // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
