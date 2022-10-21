@@ -51,6 +51,10 @@ class StockRepositoryFake: IStockRepository {
         return Resource.Success(intradayInfosToReturn)
     }
 
+    override suspend fun getIntradayInfosWithoutCatches(stockSymbol: String): Resource<List<IntradayInfo>> {
+        return Resource.Success(intradayInfosToReturn)
+    }
+
     override suspend fun getCompanyInfo(stockSymbol: String): Resource<CompanyInfo> {
         return Resource.Success(companyInfoToReturn)
     }

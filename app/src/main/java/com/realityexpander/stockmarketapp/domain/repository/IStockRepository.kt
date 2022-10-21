@@ -24,4 +24,7 @@ interface IStockRepository {
 //    fun getStock(symbol: String): CompanyListing
 //    fun addStock(stock: Stock)
 //    fun removeStock(symbol: String)
+
+    // Not used in app - for testing purposes only
+    suspend fun getIntradayInfosWithoutCatches(stockSymbol: String): Resource<List<IntradayInfo>>
 }

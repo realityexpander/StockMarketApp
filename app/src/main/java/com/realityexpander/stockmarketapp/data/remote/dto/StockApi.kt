@@ -8,13 +8,13 @@ interface StockApi {
 
     // returns a csv of company listings (only csv is supported)
     @GET("query?function=LISTING_STATUS")
-    suspend fun getListOfStocks(
+    suspend fun getListOfStocksRawCSV(
         @Query("apikey") apiKey: String = API_KEY,
     ): ResponseBody
 
     // returns a csv of intraday stock prices
     @GET("query?function=TIME_SERIES_INTRADAY&interval=60min&datatype=csv")
-    suspend fun getIntradayInfo(
+    suspend fun getIntradayInfoRawCSV(
         @Query("symbol") symbol: String,
         @Query("apikey") apiKey: String = API_KEY,
     ): ResponseBody

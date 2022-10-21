@@ -51,7 +51,7 @@ class StockRepositoryImpl @Inject constructor(
 
             // Attempt to load from remote.
             val remoteListings = try {
-                val response = api.getListOfStocks()
+                val response = api.getListOfStocksRawCSV()
                 companyListingsCSVParser.parse(response.byteStream())
             } catch (e: IOException) { // parse error
                 e.printStackTrace()
@@ -88,7 +88,7 @@ class StockRepositoryImpl @Inject constructor(
 
     override suspend fun getIntradayInfos(stockSymbol: String): Resource<List<IntradayInfo>> {
         return try {
-            val response = api.getIntradayInfo(stockSymbol)
+            val response = api.getIntradayInfoRawCSV(stockSymbol)
             // println(response.readBytes().toString(Charsets.UTF_8)) // keep for debugging
 
             val results = intradayInfoCSVParser.parse(response.byteStream())
@@ -103,6 +103,14 @@ class StockRepositoryImpl @Inject constructor(
             e.printStackTrace()
             Resource.Error(e.localizedMessage ?: "Unknown Error loading or parsing intraday info")
         }
+    }
+
+    // note: for illustrating how to test a function that doesn't use catch blocks
+    override suspend fun getIntradayInfosWithoutCatches(stockSymbol: String): Resource<List<IntradayInfo>> {
+        val response = api.getIntradayInfoRawCSV(stockSymbol)
+        val results = intradayInfoCSVParser.parse(response.byteStream())
+
+        return Resource.Success(results)
     }
 
     override suspend fun getCompanyInfo(stockSymbol: String): Resource<CompanyInfo> {
