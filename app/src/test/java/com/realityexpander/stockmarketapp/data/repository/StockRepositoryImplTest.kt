@@ -14,14 +14,10 @@ import com.realityexpander.stockmarketapp.data.remote.dto.StockApi
 import com.realityexpander.stockmarketapp.domain.model.CompanyListing
 import com.realityexpander.stockmarketapp.domain.model.IntradayInfo
 import com.realityexpander.stockmarketapp.util.Resource
-import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody.Companion.toResponseBody
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import retrofit2.HttpException
@@ -30,8 +26,12 @@ import java.io.IOException
 import java.time.LocalDateTime
 import kotlin.reflect.cast
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.*
+import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.*
+import org.junit.Before
+import org.junit.Test
 
 // Articles on testing:
 // https://medium.com/swlh/kotlin-coroutines-in-android-unit-test-28ff280fc0d5
@@ -79,9 +79,12 @@ class StockRepositoryImplTest {
 
     //private val testDispatcher = StandardTestDispatcher()
 
+    @MockK
+    lateinit var repositoryTestWithMockAnnotation: StockRepositoryImpl
+
     @Before
     fun setUp() {
-        //MockKAnnotations.init(this)
+        MockKAnnotations.init(this)
         //Dispatchers.setMain(testDispatcher)
 
         // Mock the StockApi - getListOfStocks() returns a stub that is a no-op
@@ -265,12 +268,12 @@ class StockRepositoryImplTest {
     // 1. IntradayInfosCSVParser fails with IOException (API limit reached).
     // 2. Response is Error and has error message.
     @Suppress("useless_cast")
-    fun `getIntradayInfos will fail due to IntradayInfosCSVParser IOException`() = runTest {
+    fun `getIntradayInfos will fail due to IntradayInfosCSVParser IOException`()  {
 
         // ARRANGE
         val expectedException = IOException("Test - API LIMIT REACHED")
 
-        // CSVParser<IntradayInfo> - parse() returns exception
+        // CSVParser<IntradayInfo> - parse() returns IOException
         intradayInfosCSVParserMockk = mockk(relaxed = true) {
             coEvery { parse(any()) } throws expectedException
         }
@@ -283,16 +286,18 @@ class StockRepositoryImplTest {
             intradayInfoCSVParser = intradayInfosCSVParserMockk
         )
 
-        // ACT
-        val apiResponse = repositoryTest.getIntradayInfos("GOOGL")
+        runTest {
+            // ACT
+            val apiResponse = repositoryTest.getIntradayInfos("GOOGL")
 
-        //ASSERT
-        // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
-        assertThat(apiResponse).isNotNull()
-        assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
-        assertThat((apiResponse as Resource.Error).message).isNotNull()
-        assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.localizedMessage)
-        coVerify(exactly = 1) { intradayInfosCSVParserMockk.parse(any()) }
+            //ASSERT
+            // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
+            assertThat(apiResponse).isNotNull()
+            assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
+            assertThat((apiResponse as Resource.Error).message).isNotNull()
+            assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.localizedMessage)
+            coVerify(exactly = 1) { intradayInfosCSVParserMockk.parse(any()) }
+        }
     }
 
     @Test
@@ -368,6 +373,7 @@ class StockRepositoryImplTest {
             )
         )
 
+        // Using "create object" style (not using @MockK)
         // getIntradayInfos() throws an HttpException
         val stockApiMockk: StockApi = mockk(relaxed = true) {
             coEvery { getIntradayInfoRawCSV(any()) } coAnswers {
@@ -382,6 +388,23 @@ class StockRepositoryImplTest {
             companyListingsCSVParser = companyListingsCSVParserMockk,
             intradayInfoCSVParser = intradayInfosCSVParserMockk
         )
+
+        // Using @MockK annotation style
+        if (false) {
+            // Un-mock getIntradayInfos method
+            coEvery { repositoryTestWithMockAnnotation.getIntradayInfos(any()) } coAnswers {
+                callOriginal()
+            }
+
+            // // Un-mock getIntradayInfoRawCSV method (requires `api` param to be public!!!)
+            //coEvery { repositoryTestWithMockAnnotation.api } coAnswers {
+            //    mockk(relaxed = true) {
+            //        coEvery { getIntradayInfoRawCSV(any()) } throws expectedException
+            //    }
+            //}
+
+            repositoryTest = repositoryTestWithMockAnnotation
+        }
 
         runTest {
 //        runBlocking {
@@ -404,7 +427,7 @@ class StockRepositoryImplTest {
     @Test
     // 1. Remote fetch fails with general Exception.
     // 2. Response is Error and has error message.
-    fun `getIntradayInfos will fail due to fetch general exception`() = runTest {
+    fun `getIntradayInfos will fail due to fetch general exception`()  {
 
         // ARRANGE
 
@@ -426,24 +449,26 @@ class StockRepositoryImplTest {
             intradayInfoCSVParser = intradayInfosCSVParserMockk
         )
 
-        // ACT
-        val apiResponse = repositoryTest.getIntradayInfos("UNKNOWN_COMPANY_SYMBOL")
+        runTest {
+            // ACT
+            val apiResponse = repositoryTest.getIntradayInfos("UNKNOWN_COMPANY_SYMBOL")
 
-        //ASSERT
-        // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
-        assertThat(apiResponse).isNotNull()
-        assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
-        assertThat((apiResponse as Resource.Error).message).isNotNull()
-        @Suppress("useless_cast")
-        assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.localizedMessage)
-        coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+            //ASSERT
+            // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
+            assertThat(apiResponse).isNotNull()
+            assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
+            assertThat((apiResponse as Resource.Error).message).isNotNull()
+            @Suppress("useless_cast")
+            assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.localizedMessage)
+            coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+        }
     }
 
     @Test
     // 1. Remote fetch fails with IOException.
     // 2. Response is Error and has error message.
     @Suppress("useless_cast")
-    fun `getIntradayInfos will fail due to fetch IOException`() = runTest {
+    fun `getIntradayInfos will fail due to fetch IOException`()  {
 
         // ARRANGE
 
@@ -465,22 +490,24 @@ class StockRepositoryImplTest {
             intradayInfoCSVParser = intradayInfosCSVParserMockk
         )
 
-        // ACT
-        val apiResponse = repositoryTest.getIntradayInfos("GOOGL")
+        runTest {
+            // ACT
+            val apiResponse = repositoryTest.getIntradayInfos("GOOGL")
 
-        //ASSERT
-        // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
-        assertThat(apiResponse).isNotNull()
-        assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
-        assertThat((apiResponse as Resource.Error).message).isNotNull()
-        assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.localizedMessage)
-        coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+            //ASSERT
+            // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
+            assertThat(apiResponse).isNotNull()
+            assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
+            assertThat((apiResponse as Resource.Error).message).isNotNull()
+            assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.localizedMessage)
+            coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+        }
     }
 
     @Test
     // 1. Remote fetch fails with HttpException and NOT caught in repository.
     // 2. Exception contains error message.
-    fun `getIntradayInfosWithoutCatches will fail due to fetch HttpException`() = runTest {
+    fun `getIntradayInfosWithoutCatches will fail due to fetch HttpException`() {
 
         // ARRANGE
         val expectedExceptionCode = 404
@@ -506,55 +533,60 @@ class StockRepositoryImplTest {
             intradayInfoCSVParser = intradayInfosCSVParserMockk
         )
 
-        if (true) {
-            // ACT
-            val apiRes = runCatching {
-                repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
+        runTest {
+            if (true) {
+                // ACT
+                val apiRes = runCatching {
+                    repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
 
-                assertThat(true).isFalse() // should not reach this line
-            }.onFailure {
+                    assertThat(true).isFalse() // should not reach this line
+                }.onFailure {
+                    // ASSERT
+                    assertThat(it).isInstanceOf(expectedException::class.java)
+                }
+
                 // ASSERT
-                assertThat(it).isInstanceOf(expectedException::class.java)
-            }
+                assertThat(apiRes.isFailure).isTrue()
+                assertThat(apiRes.exceptionOrNull()).isInstanceOf(expectedException::class.java)
+                assertThat(apiRes.exceptionOrNull()?.message).isEqualTo(expectedException.localizedMessage)
 
-            // ASSERT
-            assertThat(apiRes.isFailure).isTrue()
-            assertThat(apiRes.exceptionOrNull()).isInstanceOf(expectedException::class.java)
-            assertThat(apiRes.exceptionOrNull()?.message).isEqualTo(expectedException.localizedMessage)
-
-            //assertThat((apiRes.exceptionOrNull() as HttpException).code()).isEqualTo(expectedExceptionCode)
-            assertThat((expectedException::class).cast(apiRes.exceptionOrNull()) // Force to the exception type
+                //assertThat((apiRes.exceptionOrNull() as HttpException).code()).isEqualTo(expectedExceptionCode)
+                assertThat(
+                    (expectedException::class).cast(apiRes.exceptionOrNull()) // Force to the exception type
                         .code()
                 ).isEqualTo(expectedExceptionCode)
-        }
-
-        // Alternate method of detecting exception
-        if (false) {
-            try {
-                // ACT
-                val apiResponse = repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
-
-                assertThat(true).isFalse() // should not reach this line
-                println("apiResponse: $apiResponse")
-            } catch (e: Throwable) {
-                // ASSERT
-                assertThat(e).isInstanceOf(expectedException::class.java)
-                assertThat(e.message).isEqualTo(expectedException.localizedMessage)
-                //assertThat((e as HttpException).code()).isEqualTo(expectedExceptionCode)
-                assertThat((expectedException::class).cast(e) // Force to the exception type
-                        .code()
-                    ).isEqualTo(expectedExceptionCode)
             }
 
-            // ASSERT
-            coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+            // Alternate method of detecting exception
+            if (false) {
+                try {
+                    // ACT
+                    val apiResponse =
+                        repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
+
+                    assertThat(true).isFalse() // should not reach this line
+                    println("apiResponse: $apiResponse")
+                } catch (e: Throwable) {
+                    // ASSERT
+                    assertThat(e).isInstanceOf(expectedException::class.java)
+                    assertThat(e.message).isEqualTo(expectedException.localizedMessage)
+                    //assertThat((e as HttpException).code()).isEqualTo(expectedExceptionCode)
+                    assertThat(
+                        (expectedException::class).cast(e) // Force to the exception type
+                            .code()
+                    ).isEqualTo(expectedExceptionCode)
+                }
+
+                // ASSERT
+                coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+            }
         }
     }
 
     @Test
     // 1. Remote fetch fails with IOException and NOT caught in repository.
     // 2. Exception contains error message.
-    fun `getIntradayInfosWithoutCatches will fail due to fetch IOException`() = runTest {
+    fun `getIntradayInfosWithoutCatches will fail due to fetch IOException`() {
 
         // ARRANGE
         val expectedException = IOException("Test IOException")
@@ -574,46 +606,49 @@ class StockRepositoryImplTest {
             intradayInfoCSVParser = intradayInfosCSVParserMockk
         )
 
-        if (true) {
-            // ACT
-            val apiRes = runCatching {
-                repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
-
-                assertThat(true).isFalse() // should not reach this line
-            }.onFailure {
-                // ASSERT
-                assertThat(it).isInstanceOf(expectedException::class.java)
-            }
-
-            // ASSERT
-            assertThat(apiRes.isFailure).isTrue()
-            assertThat(apiRes.exceptionOrNull()).isInstanceOf(expectedException::class.java)
-            assertThat(apiRes.exceptionOrNull()?.message).isEqualTo(expectedException.localizedMessage)
-        }
-
-        // Alternate method of detecting exception
-        if (false) {
-            try {
+        runTest {
+            if (true) {
                 // ACT
-                val apiResponse = repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
+                val apiRes = runCatching {
+                    repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
 
-                assertThat(true).isFalse() // should not reach this line
-                println("apiResponse: $apiResponse")
-            } catch (e: Throwable) {
+                    assertThat(true).isFalse() // should not reach this line
+                }.onFailure {
+                    // ASSERT
+                    assertThat(it).isInstanceOf(expectedException::class.java)
+                }
+
                 // ASSERT
-                assertThat(e).isInstanceOf(expectedException::class.java)
-                assertThat(e.message).isEqualTo(expectedException.localizedMessage)
+                assertThat(apiRes.isFailure).isTrue()
+                assertThat(apiRes.exceptionOrNull()).isInstanceOf(expectedException::class.java)
+                assertThat(apiRes.exceptionOrNull()?.message).isEqualTo(expectedException.localizedMessage)
             }
 
-            // ASSERT
-            coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+            // Alternate method of detecting exception
+            if (false) {
+                try {
+                    // ACT
+                    val apiResponse =
+                        repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
+
+                    assertThat(true).isFalse() // should not reach this line
+                    println("apiResponse: $apiResponse")
+                } catch (e: Throwable) {
+                    // ASSERT
+                    assertThat(e).isInstanceOf(expectedException::class.java)
+                    assertThat(e.message).isEqualTo(expectedException.localizedMessage)
+                }
+
+                // ASSERT
+                coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+            }
         }
     }
 
     @Test
     // 1. Remote fetch fails with General Exception and NOT caught in repository.
     // 2. Exception contains error message.
-    fun `getIntradayInfosWithoutCatches will fail due to fetch General Exception`() = runTest {
+    fun `getIntradayInfosWithoutCatches will fail due to fetch General Exception`()  {
 
         // ARRANGE
         val expectedException = Exception("Test Exception")
@@ -633,46 +668,49 @@ class StockRepositoryImplTest {
             intradayInfoCSVParser = intradayInfosCSVParserMockk
         )
 
-        if (true) {
-            // ACT
-            val apiRes = runCatching {
-                repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
-
-                assertThat(true).isFalse() // should not reach this line
-            }.onFailure {
-                // ASSERT
-                assertThat(it).isInstanceOf(expectedException::class.java)
-            }
-
-            // ASSERT
-            assertThat(apiRes.isFailure).isTrue()
-            assertThat(apiRes.exceptionOrNull()).isInstanceOf(expectedException::class.java)
-            assertThat(apiRes.exceptionOrNull()?.message).isEqualTo(expectedException.message)
-        }
-
-        // Alternate method of detecting exception
-        if (false) {
-            try {
+        runTest {
+            if (true) {
                 // ACT
-                val apiResponse = repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
+                val apiRes = runCatching {
+                    repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
 
-                assertThat(true).isFalse() // should not reach this line
-                println("apiResponse: $apiResponse")
-            } catch (e: Throwable) {
+                    assertThat(true).isFalse() // should not reach this line
+                }.onFailure {
+                    // ASSERT
+                    assertThat(it).isInstanceOf(expectedException::class.java)
+                }
+
                 // ASSERT
-                assertThat(e).isInstanceOf(expectedException::class.java)
-                assertThat(e.message).isEqualTo(expectedException.localizedMessage)
+                assertThat(apiRes.isFailure).isTrue()
+                assertThat(apiRes.exceptionOrNull()).isInstanceOf(expectedException::class.java)
+                assertThat(apiRes.exceptionOrNull()?.message).isEqualTo(expectedException.message)
             }
 
-            // ASSERT
-            coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+            // Alternate method of detecting exception
+            if (false) {
+                try {
+                    // ACT
+                    val apiResponse =
+                        repositoryTest.getIntradayInfosWithoutCatches("UNKNOWN_COMPANY_SYMBOL")
+
+                    assertThat(true).isFalse() // should not reach this line
+                    println("apiResponse: $apiResponse")
+                } catch (e: Throwable) {
+                    // ASSERT
+                    assertThat(e).isInstanceOf(expectedException::class.java)
+                    assertThat(e.message).isEqualTo(expectedException.localizedMessage)
+                }
+
+                // ASSERT
+                coVerify { stockApiMockk.getIntradayInfoRawCSV(any()) }
+            }
         }
     }
 
     @Test
     // 1. Parsing CSV fails with exception.
     // 2. Response is Error and has error message.
-    fun `getIntradayInfos will fail due to parsing error`() = runTest {
+    fun `getIntradayInfos will fail due to parsing error`()  {
 
         // ARRANGE
         // parse() throws an exception
@@ -689,19 +727,21 @@ class StockRepositoryImplTest {
             intradayInfoCSVParser = intradayInfosCSVParserMockk
         )
 
-        // ACT
-        val apiResponse = repositoryTest.getIntradayInfos("GOOGL")
+        runTest {
+            // ACT
+            val apiResponse = repositoryTest.getIntradayInfos("GOOGL")
 
-        //ASSERT
-        // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
-        assertThat(apiResponse).isNotNull()
-        assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
-        assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.message)
+            //ASSERT
+            // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
+            assertThat(apiResponse).isNotNull()
+            assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
+            assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedException.message)
+        }
     }
 
     @Test
     // 1. Remote fetch succeeds fetching a companyInfo object.
-    fun `getCompanyInfo will fetch data successfully`() = runTest {
+    fun `getCompanyInfo will fetch data successfully`()  {
 
         // ARRANGE
         val expectedCompanyInfo = CompanyInfoDTO(
@@ -726,22 +766,24 @@ class StockRepositoryImplTest {
             intradayInfoCSVParser = intradayInfosCSVParserMockk
         )
 
-        // ACT
-        val apiResponse = repositoryTest.getCompanyInfo("GOOGL")
+        runTest {
+            // ACT
+            val apiResponse = repositoryTest.getCompanyInfo("GOOGL")
 
-        //ASSERT
-        // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
-        assertThat(apiResponse).isNotNull()
-        assertThat(apiResponse).isInstanceOf(Resource.Success::class.java)
-        (apiResponse as Resource.Success).data?.let { companyInfo ->
-            assertThat(companyInfo).isEqualTo(expectedCompanyInfo.toCompanyInfo())
+            //ASSERT
+            // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
+            assertThat(apiResponse).isNotNull()
+            assertThat(apiResponse).isInstanceOf(Resource.Success::class.java)
+            (apiResponse as Resource.Success).data?.let { companyInfo ->
+                assertThat(companyInfo).isEqualTo(expectedCompanyInfo.toCompanyInfo())
+            }
         }
     }
 
     @Test
     // 1. Remote fetch fails with error due to API Limit hit.
     // 2. Response is Error and has correct error message
-    fun `getCompanyInfo will fail due to fetch error - API Limit reached`() = runTest {
+    fun `getCompanyInfo will fail due to fetch error - API Limit reached`()  {
 
         // ARRANGE
         val expectedErrorMessage = "API limit reached, please try again later."
@@ -766,14 +808,16 @@ class StockRepositoryImplTest {
             intradayInfoCSVParser = intradayInfosCSVParserMockk
         )
 
-        // ACT
-        val apiResponse = repositoryTest.getCompanyInfo("GOOGL")
+        runTest {
+            // ACT
+            val apiResponse = repositoryTest.getCompanyInfo("GOOGL")
 
-        //ASSERT
-        // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
-        assertThat(apiResponse).isNotNull()
-        assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
-        assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedErrorMessage)
+            //ASSERT
+            // should use format: assertThat(ACTUAL).isEqualTo(EXPECTED)
+            assertThat(apiResponse).isNotNull()
+            assertThat(apiResponse).isInstanceOf(Resource.Error::class.java)
+            assertThat((apiResponse as Resource.Error).message).isEqualTo(expectedErrorMessage)
+        }
     }
 
 }
