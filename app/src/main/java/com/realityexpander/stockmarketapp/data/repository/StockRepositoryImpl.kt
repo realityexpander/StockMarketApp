@@ -1,5 +1,6 @@
 package com.realityexpander.stockmarketapp.data.repository
 
+import com.realityexpander.stockmarketapp.BuildConfig
 import com.realityexpander.stockmarketapp.data.csv.CSVParser
 import com.realityexpander.stockmarketapp.data.local.StockDatabase
 import com.realityexpander.stockmarketapp.data.mapper.toCompanyInfo
@@ -11,6 +12,7 @@ import com.realityexpander.stockmarketapp.domain.model.CompanyListing
 import com.realityexpander.stockmarketapp.domain.model.IntradayInfo
 import com.realityexpander.stockmarketapp.domain.repository.IStockRepository
 import com.realityexpander.stockmarketapp.util.Resource
+import com.realityexpander.stockmarketapp.util.isJUnitTestRunning
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException
@@ -93,13 +95,13 @@ class StockRepositoryImpl @Inject constructor(
             val results = intradayInfoCSVParser.parse(response.byteStream())
             Resource.Success(results)
         } catch (e: IOException) { // parse error
-            e.printStackTrace()
+            if(!isJUnitTestRunning() && BuildConfig.DEBUG) e.printStackTrace()
             Resource.Error(e.localizedMessage ?: "Error loading or parsing intraday info")
         } catch (e: HttpException) { // invalid network response
-            e.printStackTrace()
+            if(!isJUnitTestRunning() && BuildConfig.DEBUG) e.printStackTrace()
             Resource.Error(e.localizedMessage ?: "Error with network for intraday info")
         } catch (e: Exception) { // unknown error
-            e.printStackTrace()
+            if(!isJUnitTestRunning() && BuildConfig.DEBUG) e.printStackTrace()
             Resource.Error(e.localizedMessage ?: "Unknown Error loading or parsing intraday info")
         }
     }
@@ -123,18 +125,17 @@ class StockRepositoryImpl @Inject constructor(
                 Resource.Success(response.toCompanyInfo())
             }
         } catch (e: IOException) { // parse error
-            e.printStackTrace()
+            if(!isJUnitTestRunning() && BuildConfig.DEBUG) e.printStackTrace()
             Resource.Error(e.localizedMessage ?: "Error loading or parsing company info")
         } catch (e: HttpException) { // invalid network response
-            e.printStackTrace()
+            if(!isJUnitTestRunning() && BuildConfig.DEBUG) e.printStackTrace()
             Resource.Error(e.localizedMessage ?: "Error with network for company info")
         } catch (e: Exception) { // unknown error
-            e.printStackTrace()
+            if(!isJUnitTestRunning() && BuildConfig.DEBUG) e.printStackTrace()
             Resource.Error(e.localizedMessage ?: "Unknown Error loading or parsing company info")
         }
     }
 }
-
 
 
 
