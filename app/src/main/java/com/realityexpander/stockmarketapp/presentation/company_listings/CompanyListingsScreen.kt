@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,6 +21,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.realityexpander.stockmarketapp.domain.model.CompanyListing
 import com.realityexpander.stockmarketapp.presentation.destinations.CompanyInfoScreenDestination
 import com.realityexpander.stockmarketapp.util.Resource
+import kotlinx.coroutines.delay
 
 @Composable
 @Destination(start = true)
@@ -49,6 +51,7 @@ fun CompanyListingsScreen(
             maxLines = 1,
             singleLine = true,
         )
+
         // Show loading indicator
         if (state.isLoading) {
             CircularProgressIndicator(
@@ -66,6 +69,7 @@ fun CompanyListingsScreen(
                 textAlign = TextAlign.Center
             )
         }
+
         // Show error message
         if (state.errorMessage != null) {
             Text(
